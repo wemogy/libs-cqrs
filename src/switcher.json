@@ -1,0 +1,7 @@
+{
+  "solution": "Wemogy.CQRS.sln",
+  "mappings": {
+    "Wemogy.Core": "../../libs/helpers/src/Wemogy.Core/Wemogy.Core.csproj"
+  },
+  "removeProjects": true
+}
