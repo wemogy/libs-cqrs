@@ -7,7 +7,7 @@ using Wemogy.Infrastructure.Database.Core.Abstractions;
 namespace Wemogy.CQRS.Extensions.Database.Queries.GetEntity;
 
 public abstract class
-    GetEntityQueryHandler<TDatabaseRepository, TEntity, TPartitionKey, TId, TQuery> : IQueryHandler<TQuery, TEntity>
+    GetEntityQueryHandler<TQuery, TDatabaseRepository, TEntity, TPartitionKey, TId> : IQueryHandler<TQuery, TEntity>
     where TQuery : GetEntityQuery<TEntity, TPartitionKey, TId>
     where TDatabaseRepository : IDatabaseRepository<TEntity, TPartitionKey, TId>
     where TEntity : IEntityBase<TId>
