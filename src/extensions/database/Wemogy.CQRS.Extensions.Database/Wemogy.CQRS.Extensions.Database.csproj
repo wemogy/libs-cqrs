@@ -2,6 +2,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <IsPackable>true</IsPackable>
+    <LangVersion>10</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -18,9 +19,33 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="Wemogy.Infrastructure.Database.Core" Version="0.1.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\core\Wemogy.CQRS\Wemogy.CQRS.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Queries\GetEntity\GetEntityQueryHandler`5.cs">
+      <CodeLanguage>cs</CodeLanguage>
+      <DefaultPackFolder>content</DefaultPackFolder>
+      <BuildAction>Compile</BuildAction>
+    </Compile>
+    <Compile Update="Queries\GetEntity\GetEntityQueryHandler`4.cs">
+      <CodeLanguage>cs</CodeLanguage>
+      <DefaultPackFolder>content</DefaultPackFolder>
+      <BuildAction>Compile</BuildAction>
+    </Compile>
+    <Compile Update="Queries\GetEntity\GetEntityQuery`1.cs">
+      <CodeLanguage>cs</CodeLanguage>
+      <DefaultPackFolder>content</DefaultPackFolder>
+      <BuildAction>Compile</BuildAction>
+    </Compile>
+    <Compile Update="Queries\GetEntity\GetEntityQuery`3.cs">
+      <CodeLanguage>cs</CodeLanguage>
+      <DefaultPackFolder>content</DefaultPackFolder>
+      <BuildAction>Compile</BuildAction>
+    </Compile>
   </ItemGroup>
 </Project>

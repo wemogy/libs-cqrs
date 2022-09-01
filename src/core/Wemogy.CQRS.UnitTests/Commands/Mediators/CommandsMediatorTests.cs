@@ -17,14 +17,14 @@ public class CommandsMediatorTests
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddTestApplication();
         var serviceProvider = serviceCollection.BuildServiceProvider();
-        var commandsProxy = serviceProvider.GetRequiredService<ICommands>();
+        var commandsMediator = serviceProvider.GetRequiredService<ICommands>();
         var createUserCommand = new CreateUserCommand
         {
             Firstname = "John"
         };
 
         // Act
-        var res = await commandsProxy.RunAsync(createUserCommand);
+        var res = await commandsMediator.RunAsync(createUserCommand);
 
         // Assert
         res.Firstname.Should().Be(createUserCommand.Firstname);

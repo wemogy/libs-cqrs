@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 using Wemogy.CQRS.Queries.Abstractions;
 
@@ -13,9 +14,9 @@ public class QueryRunner<TQuery, TResult>
         _queryHandler = queryHandler;
     }
 
-    public async Task<TResult> QueryAsync(TQuery query)
+    public async Task<TResult> QueryAsync(TQuery query, CancellationToken cancellationToken)
     {
-        var result = await _queryHandler.HandleAsync(query);
+        var result = await _queryHandler.HandleAsync(query, cancellationToken);
         return result;
     }
 }

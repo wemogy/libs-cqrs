@@ -1,6 +1,5 @@
 namespace Wemogy.CQRS.UnitTests.TestApplication.Common.Entities;
 
-// ToDo: use entity base
 public class User
 {
     public string Firstname { get; set; }

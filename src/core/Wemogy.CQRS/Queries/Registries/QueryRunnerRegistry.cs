@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Wemogy.Core.Extensions;
@@ -19,10 +20,10 @@ public class QueryRunnerRegistry : RegistryBase<Type, TypeMethodRegistryEntry>
         _serviceProvider = serviceProvider;
     }
 
-    public Task<TResult> ExecuteQueryRunnerAsync<TResult>(IQuery<TResult> query)
+    public Task<TResult> ExecuteQueryRunnerAsync<TResult>(IQuery<TResult> query, CancellationToken cancellationToken)
     {
         var queryRunnerEntry = GetQueryRunnerEntry(query);
-        return ExecuteQueryRunnerAsync(queryRunnerEntry, query);
+        return ExecuteQueryRunnerAsync(queryRunnerEntry, query, cancellationToken);
     }
 
     private TypeMethodRegistryEntry GetQueryRunnerEntry<TResult>(IQuery<TResult> query)
@@ -34,10 +35,11 @@ public class QueryRunnerRegistry : RegistryBase<Type, TypeMethodRegistryEntry>
 
     private Task<TResult> ExecuteQueryRunnerAsync<TResult>(
         TypeMethodRegistryEntry queryRunnerEntry,
-        IQuery<TResult> query)
+        IQuery<TResult> query,
+        CancellationToken cancellationToken)
     {
         var queryRunner = _serviceProvider.GetRequiredService(queryRunnerEntry.Type);
-        dynamic res = queryRunnerEntry.Method.Invoke(queryRunner, new object[] { query });
+        dynamic res = queryRunnerEntry.Method.Invoke(queryRunner, new object[] { query, cancellationToken });
         return res;
     }
 

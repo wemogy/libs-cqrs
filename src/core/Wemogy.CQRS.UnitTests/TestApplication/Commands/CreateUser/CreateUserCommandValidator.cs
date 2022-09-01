@@ -4,7 +4,7 @@ using Wemogy.CQRS.Commands.Abstractions;
 
 namespace Wemogy.CQRS.UnitTests.TestApplication.Commands.CreateUser;
 
-public class CreateUserCommandValidator : CommandValidatorBase<CreateUserCommand>, ICommandValidator<CreateUserCommand>
+public class CreateUserCommandValidator : FluentValidationCommandValidator<CreateUserCommand>, ICommandValidator<CreateUserCommand>
 {
     public static int CalledCount { get; private set; }
 
