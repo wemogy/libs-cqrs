@@ -15,7 +15,7 @@ using Wemogy.CQRS.Queries.Runners;
 
 namespace Wemogy.CQRS;
 
-public static class Setup
+public static class DependencyInjection
 {
     public static void AddCQRS(
         this IServiceCollection serviceCollection,
@@ -27,13 +27,13 @@ public static class Setup
             assembly = Assembly.GetCallingAssembly();
         }
 
-        serviceCollection.AddCqrs(new List<Assembly>
+        serviceCollection.AddCQRS(new List<Assembly>
         {
             assembly
         });
     }
 
-    public static void AddCqrs(
+    public static void AddCQRS(
         this IServiceCollection serviceCollection,
         List<Assembly> assemblies)
     {
