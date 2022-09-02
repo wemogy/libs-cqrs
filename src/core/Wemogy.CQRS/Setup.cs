@@ -17,7 +17,7 @@ namespace Wemogy.CQRS;
 
 public static class Setup
 {
-    public static void AddCqrs(
+    public static void AddCQRS(
         this IServiceCollection serviceCollection,
         Assembly? assembly = null)
     {

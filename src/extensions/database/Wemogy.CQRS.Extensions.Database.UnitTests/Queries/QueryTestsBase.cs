@@ -13,7 +13,7 @@ public abstract class QueryTestsBase
     {
         var serviceCollection = new ServiceCollection();
 
-        serviceCollection.AddCqrs();
+        serviceCollection.AddCQRS();
 
         serviceCollection
             .AddInMemoryDatabaseClient()
