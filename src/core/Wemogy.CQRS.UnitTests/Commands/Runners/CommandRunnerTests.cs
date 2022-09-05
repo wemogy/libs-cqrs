@@ -18,7 +18,7 @@ public class CommandRunnerTests
     {
         // reset static counters
         CreateUserCommandValidator.Reset();
-        CreateUserCommandAuthentication.Reset();
+        CreateUserCommandAuthorization.Reset();
         CreateUserCommandPreProcessor.Reset();
         CreateUserCommandHandler.Reset();
         CreateUserCommandPostProcessor.Reset();
@@ -42,7 +42,7 @@ public class CommandRunnerTests
 
         // Assert
         CreateUserCommandValidator.CalledCount.Should().Be(1);
-        CreateUserCommandAuthentication.CalledCount.Should().Be(1);
+        CreateUserCommandAuthorization.CalledCount.Should().Be(1);
         CreateUserCommandPreProcessor.CalledCount.Should().Be(1);
         CreateUserCommandHandler.CalledCount.Should().Be(1);
         CreateUserCommandPostProcessor.CalledCount.Should().Be(1);
