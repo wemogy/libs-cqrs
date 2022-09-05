@@ -8,6 +8,7 @@ using Xunit;
 
 namespace Wemogy.CQRS.UnitTests.Commands.Mediators;
 
+[Collection("Sequential")]
 public class CommandsMediatorTests
 {
     [Fact]

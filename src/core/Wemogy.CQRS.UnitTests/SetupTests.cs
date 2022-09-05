@@ -12,6 +12,7 @@ using Xunit;
 
 namespace Wemogy.CQRS.UnitTests;
 
+[Collection("Sequential")]
 public class SetupTests
 {
     [Fact]

@@ -31,4 +31,4 @@ runs:
     - name: Test
       working-directory: src
       shell: bash
-      run: dotnet test --configuration ${{ inputs.configuration }} --no-build --verbosity normal
+      run: dotnet test --configuration ${{ inputs.configuration }} --verbosity normal

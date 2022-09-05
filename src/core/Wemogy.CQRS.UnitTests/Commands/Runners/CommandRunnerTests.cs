@@ -12,6 +12,7 @@ using Xunit;
 
 namespace Wemogy.CQRS.UnitTests.Commands.Runners;
 
+[Collection("Sequential")]
 public class CommandRunnerTests
 {
     public CommandRunnerTests()
