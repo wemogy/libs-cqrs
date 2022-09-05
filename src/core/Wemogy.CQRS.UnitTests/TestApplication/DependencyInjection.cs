@@ -7,7 +7,7 @@ public static class DependencyInjection
 {
     public static void AddTestApplication(this IServiceCollection services)
     {
-        services.AddCqrs();
+        services.AddCQRS();
         services.AddSingleton(new TestContext
         {
             TenantId = TestContext.DefaultTenantId

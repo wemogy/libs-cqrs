@@ -5,7 +5,7 @@ using Wemogy.CQRS.UnitTests.TestApplication.Common.Contexts;
 
 namespace Wemogy.CQRS.UnitTests.TestApplication.Commands.CreateUser;
 
-public class CreateUserCommandAuthentication : ICommandAuthorization<CreateUserCommand>
+public class CreateUserCommandAuthorization : ICommandAuthorization<CreateUserCommand>
 {
     public static int CalledCount { get; private set; }
 
@@ -16,7 +16,7 @@ public class CreateUserCommandAuthentication : ICommandAuthorization<CreateUserC
 
     private readonly TestContext _testContext;
 
-    public CreateUserCommandAuthentication(TestContext testContext)
+    public CreateUserCommandAuthorization(TestContext testContext)
     {
         _testContext = testContext;
     }
