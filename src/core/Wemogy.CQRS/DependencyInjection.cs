@@ -7,7 +7,9 @@ using Wemogy.Core.Extensions;
 using Wemogy.CQRS.Commands.Abstractions;
 using Wemogy.CQRS.Commands.Mediators;
 using Wemogy.CQRS.Commands.Registries;
+using Wemogy.CQRS.Commands.Resolvers;
 using Wemogy.CQRS.Commands.Runners;
+using Wemogy.CQRS.Common.ValueObjects;
 using Wemogy.CQRS.Queries.Abstractions;
 using Wemogy.CQRS.Queries.Mediators;
 using Wemogy.CQRS.Queries.Registries;
@@ -20,7 +22,8 @@ public static class DependencyInjection
 {
     public static CQRSSetupEnvironment AddCQRS(
         this IServiceCollection serviceCollection,
-        Assembly? assembly = null)
+        Assembly? assembly = null,
+        Dictionary<Type, Type>? dependencies = null)
     {
         // Set assembly to the calling assembly if not specified
         if (assembly == null)
@@ -28,22 +31,26 @@ public static class DependencyInjection
             assembly = Assembly.GetCallingAssembly();
         }
 
-        return serviceCollection.AddCQRS(new List<Assembly>
-        {
-            assembly
-        });
+        return serviceCollection.AddCQRS(
+            new List<Assembly>
+            {
+                assembly
+            },
+            dependencies);
     }
 
     public static CQRSSetupEnvironment AddCQRS(
         this IServiceCollection serviceCollection,
-        List<Assembly> assemblies)
+        List<Assembly> assemblies,
+        Dictionary<Type, Type>? dependencies = null)
     {
-        serviceCollection.AddCommands(assemblies);
+        dependencies ??= new Dictionary<Type, Type>();
+        serviceCollection.AddCommands(assemblies, dependencies);
         serviceCollection.AddQueries(assemblies);
         return new CQRSSetupEnvironment(serviceCollection);
     }
 
-    private static void AddCommands(this IServiceCollection serviceCollection, List<Assembly> assemblies)
+    private static void AddCommands(this IServiceCollection serviceCollection, List<Assembly> assemblies, Dictionary<Type, Type> dependencies)
     {
         var commandTypes = assemblies.GetClassTypesWhichImplementInterface(typeof(ICommand<>));
 
@@ -86,6 +93,12 @@ public static class DependencyInjection
 
             // post-processing
             serviceCollection.AddPostProcessing(assembly, commandType, resultType);
+
+            // ScheduledCommandDependencyResolver
+            serviceCollection.AddSingleton(
+                new ScheduledCommandDependencies(dependencies));
+            serviceCollection.AddScoped<IScheduledCommandDependencyResolver>(provider =>
+                new ScheduledCommandDependencyResolver(provider, dependencies));
         }
 
         // Add ICommands mediator
