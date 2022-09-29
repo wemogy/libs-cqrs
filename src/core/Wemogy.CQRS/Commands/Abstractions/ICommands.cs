@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 
 namespace Wemogy.CQRS.Commands.Abstractions;
@@ -6,7 +7,9 @@ public interface ICommands
 {
     Task<TResult> RunAsync<TResult>(ICommand<TResult> command);
 
-    Task<TResult> ScheduleDelayedAsync<TResult>(ICommand<TResult> command);
+    Task<string> ScheduleDelayedAsync<TResult>(ICommand<TResult> command, TimeSpan delay);
+
+    Task DeleteDelayedAsync(string jobId);
 
     /// <summary>
     /// Create a recurring command that will be executed every time the specified interval has passed.
@@ -27,5 +30,5 @@ public interface ICommands
     /// Removes a stored recurring command
     /// </summary>
     /// <param name="recurringCommandId">The unique id to identify the recurring command</param>
-    Task RemoveRecurringIfExistsAsync<TResult>(string recurringCommandId);
+    Task DeleteRecurringIfExistsAsync<TResult>(string recurringCommandId);
 }

@@ -74,6 +74,10 @@ public static class DependencyInjection
             var commandRunnerType = typeof(CommandRunner<,>).MakeGenericType(commandType, resultType);
             serviceCollection.AddScoped(commandRunnerType);
 
+            // delayed command runner
+            var delayedCommandRunnerType = typeof(DelayedCommandRunner<,>).MakeGenericType(commandType, resultType);
+            serviceCollection.AddScoped(delayedCommandRunnerType);
+
             // recurring command runner
             var recurringCommandRunnerType = typeof(RecurringCommandRunner<,>).MakeGenericType(commandType, resultType);
             serviceCollection.AddScoped(recurringCommandRunnerType);
@@ -87,6 +91,7 @@ public static class DependencyInjection
 
         // Add Registries
         serviceCollection.AddScoped<CommandRunnerRegistry>();
+        serviceCollection.AddScoped<DelayedCommandRunnerRegistry>();
         serviceCollection.AddScoped<RecurringCommandRunnerRegistry>();
     }
 
