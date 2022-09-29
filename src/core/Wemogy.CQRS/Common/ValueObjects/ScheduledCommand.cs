@@ -27,7 +27,7 @@ public class ScheduledCommand<TCommand> : IScheduledCommand
 
         var json = dependency?.Value;
 
-        if(json is null)
+        if (dependency is null || json is null)
         {
             return null;
         }

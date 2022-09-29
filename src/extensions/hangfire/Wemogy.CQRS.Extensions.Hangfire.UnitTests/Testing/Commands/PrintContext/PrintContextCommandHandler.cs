@@ -10,6 +10,11 @@ public class PrintContextCommandHandler : ICommandHandler<PrintContextCommand>
 {
     public static int ExecutedCount { get; private set; }
 
+    public static void Reset()
+    {
+        ExecutedCount = 0;
+    }
+
     private readonly MyTestingContext _myTestingContext;
 
     public PrintContextCommandHandler(MyTestingContext myTestingContext)
@@ -22,10 +27,5 @@ public class PrintContextCommandHandler : ICommandHandler<PrintContextCommand>
         ExecutedCount++;
         Console.WriteLine($"Context: {_myTestingContext.Name}");
         return Task.FromResult(Void.Value);
-    }
-
-    public static void Reset()
-    {
-        ExecutedCount = 0;
     }
 }

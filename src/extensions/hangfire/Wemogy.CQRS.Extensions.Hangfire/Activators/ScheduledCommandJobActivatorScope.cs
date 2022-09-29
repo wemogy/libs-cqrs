@@ -8,7 +8,6 @@ namespace Wemogy.CQRS.Extensions.Hangfire.Activators
     {
         private readonly IServiceScope _serviceScope;
 
-
         public ScheduledCommandJobActivatorScope(IServiceScope serviceScope)
         {
             _serviceScope = serviceScope;

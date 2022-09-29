@@ -31,12 +31,7 @@ public class RecurringCommandsTests
         var serviceCollection = new ServiceCollection();
         serviceCollection
             .AddTestApplication()
-            .AddHangfire();
-
-        serviceCollection.AddHangfire(config =>
-        {
-            config.UseInMemoryStorage();
-        });
+            .AddHangfire(serviceCollection);
 
         var serviceProvider = serviceCollection.BuildServiceProvider();
         var recurringCommandRunner = serviceProvider.GetRequiredService<RecurringCommandRunner<CreateUserCommand, User>>();
