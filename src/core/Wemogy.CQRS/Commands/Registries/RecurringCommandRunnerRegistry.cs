@@ -19,7 +19,7 @@ public class RecurringCommandRunnerRegistry : RegistryBase<Type, TypeMethodRegis
         _serviceProvider = serviceProvider;
     }
 
-    public Task<TResult> ExecuteRecurringCommandRunnerAsync<TResult>(
+    public Task ExecuteRecurringCommandRunnerAsync<TResult>(
         string recurringCommandId,
         ICommand<TResult> command,
         string cronExpression)
@@ -39,7 +39,7 @@ public class RecurringCommandRunnerRegistry : RegistryBase<Type, TypeMethodRegis
         return recurringCommandRunnerEntry;
     }
 
-    private Task<TResult> ExecuteRecurringCommandRunnerAsync<TResult>(
+    private Task ExecuteRecurringCommandRunnerAsync<TResult>(
         TypeMethodRegistryEntry recurringCommandRunnerEntry,
         string recurringCommandId,
         ICommand<TResult> command,
