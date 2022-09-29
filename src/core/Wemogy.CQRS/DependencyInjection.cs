@@ -74,6 +74,10 @@ public static class DependencyInjection
             var commandRunnerType = typeof(CommandRunner<,>).MakeGenericType(commandType, resultType);
             serviceCollection.AddScoped(commandRunnerType);
 
+            // recurring command runner
+            var recurringCommandRunnerType = typeof(RecurringCommandRunner<,>).MakeGenericType(commandType, resultType);
+            serviceCollection.AddScoped(recurringCommandRunnerType);
+
             // post-processing
             serviceCollection.AddPostProcessing(assembly, commandType, resultType);
         }
@@ -81,8 +85,9 @@ public static class DependencyInjection
         // Add ICommands mediator
         serviceCollection.AddScoped<ICommands, CommandsMediator>();
 
-        // Add CommandRunnerRegistry
+        // Add Registries
         serviceCollection.AddScoped<CommandRunnerRegistry>();
+        serviceCollection.AddScoped<RecurringCommandRunnerRegistry>();
     }
 
     private static void AddQueries(this IServiceCollection serviceCollection, List<Assembly> assemblies)
