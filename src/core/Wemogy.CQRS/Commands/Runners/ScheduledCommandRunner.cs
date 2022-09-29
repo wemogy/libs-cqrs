@@ -5,40 +5,40 @@ using Wemogy.CQRS.Commands.Abstractions;
 
 namespace Wemogy.CQRS.Commands.Runners;
 
-public class DelayedCommandRunner<TCommand, TResult>
+public class ScheduledCommandRunner<TCommand, TResult>
     where TCommand : ICommand<TResult>
 {
     private readonly PreProcessingRunner<TCommand, TResult> _preProcessingRunner;
     private readonly ICommandHandler<TCommand, TResult> _commandHandler;
     private readonly PostProcessingRunner<TCommand, TResult> _postProcessingRunner;
-    private readonly IDelayedJobService? _delayedJobService;
+    private readonly IScheduledCommandService? _scheduledCommandService;
 
-    public DelayedCommandRunner(
+    public ScheduledCommandRunner(
         PreProcessingRunner<TCommand, TResult> preProcessingRunner,
         ICommandHandler<TCommand, TResult> commandHandler,
         PostProcessingRunner<TCommand, TResult> postProcessingRunner,
-        IDelayedJobService? delayedJobService = null)
+        IScheduledCommandService? scheduledCommandService = null)
     {
         _preProcessingRunner = preProcessingRunner;
         _commandHandler = commandHandler;
         _postProcessingRunner = postProcessingRunner;
-        _delayedJobService = delayedJobService;
+        _scheduledCommandService = scheduledCommandService;
     }
 
     public async Task<string> ScheduleAsync(TCommand command, TimeSpan delay)
     {
-        if (_delayedJobService == null)
+        if (_scheduledCommandService == null)
         {
             throw Error.Unexpected(
-                "DelayedJobServiceNotRegistered",
-                "DelayedJobService is not registered. Please register it in the DI container.");
+                "ScheduledJobServiceNotRegistered",
+                "ScheduledJobService is not registered. Please register it in the DI container.");
         }
 
         // pre-checking
         await _preProcessingRunner.RunPreChecksAsync(command);
 
-        // schedule delayed command
-        var jobId = await _delayedJobService.ScheduleAsync(
+        // schedule scheduled command
+        var jobId = await _scheduledCommandService.ScheduleAsync(
             () => RunAsync(command),
             delay);
 

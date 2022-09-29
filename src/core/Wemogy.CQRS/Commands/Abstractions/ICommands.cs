@@ -7,28 +7,28 @@ public interface ICommands
 {
     Task<TResult> RunAsync<TResult>(ICommand<TResult> command);
 
-    Task<string> ScheduleDelayedAsync<TResult>(ICommand<TResult> command, TimeSpan delay);
-
-    Task DeleteDelayedAsync(string jobId);
+    // Task EnqueueAsync<TResult>(ICommand<TResult> command);
 
     /// <summary>
-    /// Create a recurring command that will be executed every time the specified interval has passed.
-    /// If there is already a recurring command with the same id, it will be replaced.
+    /// Schedules a command to be executed after a specified delay in a background-job
     /// </summary>
-    /// <param name="recurringCommandId">The unique id to identify the recurring command</param>
+    /// <returns>The ID of the scheduled job</returns>
+    Task<string> ScheduleAsync<TResult>(ICommand<TResult> command, TimeSpan delay);
+
+    Task DeleteScheduledAsync(string jobId);
+
+    /// <summary>
+    /// Create a recurring background-job which executes the command every time the specified interval has passed.
+    /// If there is already a recurring background-job with the same name, it will be replaced.
+    /// </summary>
+    /// <param name="name">The unique name to identify the recurring job</param>
     /// <param name="command">The command which should be executed</param>
     /// <param name="cronExpression">The interval</param>
-    Task ScheduleRecurringAsync<TResult>(string recurringCommandId, ICommand<TResult> command, string cronExpression);
+    Task ScheduleRecurringAsync<TResult>(string name, ICommand<TResult> command, string cronExpression);
 
     /// <summary>
-    /// Triggers a stored recurring command to be executed now.
+    /// Removes a stored recurring background-job if it exists
     /// </summary>
-    /// <param name="recurringCommandId">The unique id to identify the recurring command</param>
-    Task TriggerRecurringAsync<TResult>(string recurringCommandId);
-
-    /// <summary>
-    /// Removes a stored recurring command
-    /// </summary>
-    /// <param name="recurringCommandId">The unique id to identify the recurring command</param>
-    Task DeleteRecurringIfExistsAsync<TResult>(string recurringCommandId);
+    /// <param name="name">The unique name to identify the recurring job</param>
+    Task DeleteRecurringAsync<TResult>(string name);
 }

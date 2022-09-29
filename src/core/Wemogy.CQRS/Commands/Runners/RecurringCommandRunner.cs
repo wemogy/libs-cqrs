@@ -10,23 +10,23 @@ public class RecurringCommandRunner<TCommand, TResult>
     private readonly PreProcessingRunner<TCommand, TResult> _preProcessingRunner;
     private readonly ICommandHandler<TCommand, TResult> _commandHandler;
     private readonly PostProcessingRunner<TCommand, TResult> _postProcessingRunner;
-    private readonly IRecurringJobService? _recurringJobService;
+    private readonly IRecurringCommandService? _recurringCommandService;
 
     public RecurringCommandRunner(
         PreProcessingRunner<TCommand, TResult> preProcessingRunner,
         ICommandHandler<TCommand, TResult> commandHandler,
         PostProcessingRunner<TCommand, TResult> postProcessingRunner,
-        IRecurringJobService? recurringJobService = null)
+        IRecurringCommandService? recurringCommandService = null)
     {
         _preProcessingRunner = preProcessingRunner;
         _commandHandler = commandHandler;
         _postProcessingRunner = postProcessingRunner;
-        _recurringJobService = recurringJobService;
+        _recurringCommandService = recurringCommandService;
     }
 
     public async Task ScheduleAsync(string recurringCommandId, TCommand command, string cronExpression)
     {
-        if (_recurringJobService == null)
+        if (_recurringCommandService == null)
         {
             throw Error.Unexpected(
                 "RecurringJobServiceNotRegistered",
@@ -37,7 +37,7 @@ public class RecurringCommandRunner<TCommand, TResult>
         await _preProcessingRunner.RunPreChecksAsync(command);
 
         // schedule recurring command
-        await _recurringJobService.AddOrUpdateAsync(
+        await _recurringCommandService.AddOrUpdateAsync(
             recurringCommandId,
             () => RunAsync(command),
             cronExpression);

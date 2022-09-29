@@ -4,6 +4,7 @@ using FluentAssertions;
 using Hangfire;
 using Microsoft.Extensions.DependencyInjection;
 using Wemogy.CQRS.Commands.Abstractions;
+using Wemogy.CQRS.UnitTests.TestApplication;
 using Xunit;
 
 namespace Wemogy.CQRS.Extensions.Hangfire.UnitTests.Services;
@@ -15,7 +16,9 @@ public class HangfireDelayedJobServiceTests
     {
         // Arrange
         var serviceCollection = new ServiceCollection();
-        serviceCollection.AddHangfireCQRSExtension();
+        serviceCollection
+            .AddTestApplication()
+            .AddHangfire();
 
         serviceCollection.AddHangfire(config =>
         {
@@ -23,13 +26,13 @@ public class HangfireDelayedJobServiceTests
         });
 
         var serviceProvider = serviceCollection.BuildServiceProvider();
-        var delayedJobService = serviceProvider.GetRequiredService<IDelayedJobService>();
+        var scheduledCommandService = serviceProvider.GetRequiredService<IScheduledCommandService>();
         var storageConnection = JobStorage.Current.GetConnection();
 
         // Act
-        var jobId = await delayedJobService.ScheduleAsync(() => DummyAction(), TimeSpan.FromMinutes(1));
+        var jobId = await scheduledCommandService.ScheduleAsync(() => DummyAction(), TimeSpan.FromMinutes(1));
         var jobDataAfterScheduling = storageConnection.GetJobData(jobId);
-        await delayedJobService.CancelAsync(jobId);
+        await scheduledCommandService.DeleteAsync(jobId);
         var jobDataAfterDelete = storageConnection.GetJobData(jobId);
 
         // Assert

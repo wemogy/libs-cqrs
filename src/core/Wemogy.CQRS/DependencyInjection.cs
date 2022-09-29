@@ -12,12 +12,13 @@ using Wemogy.CQRS.Queries.Abstractions;
 using Wemogy.CQRS.Queries.Mediators;
 using Wemogy.CQRS.Queries.Registries;
 using Wemogy.CQRS.Queries.Runners;
+using Wemogy.CQRS.Setup;
 
 namespace Wemogy.CQRS;
 
 public static class DependencyInjection
 {
-    public static void AddCQRS(
+    public static CQRSSetupEnvironment AddCQRS(
         this IServiceCollection serviceCollection,
         Assembly? assembly = null)
     {
@@ -27,18 +28,19 @@ public static class DependencyInjection
             assembly = Assembly.GetCallingAssembly();
         }
 
-        serviceCollection.AddCQRS(new List<Assembly>
+        return serviceCollection.AddCQRS(new List<Assembly>
         {
             assembly
         });
     }
 
-    public static void AddCQRS(
+    public static CQRSSetupEnvironment AddCQRS(
         this IServiceCollection serviceCollection,
         List<Assembly> assemblies)
     {
         serviceCollection.AddCommands(assemblies);
         serviceCollection.AddQueries(assemblies);
+        return new CQRSSetupEnvironment(serviceCollection);
     }
 
     private static void AddCommands(this IServiceCollection serviceCollection, List<Assembly> assemblies)
@@ -75,8 +77,8 @@ public static class DependencyInjection
             serviceCollection.AddScoped(commandRunnerType);
 
             // delayed command runner
-            var delayedCommandRunnerType = typeof(DelayedCommandRunner<,>).MakeGenericType(commandType, resultType);
-            serviceCollection.AddScoped(delayedCommandRunnerType);
+            var scheduledCommandRunnerType = typeof(ScheduledCommandRunner<,>).MakeGenericType(commandType, resultType);
+            serviceCollection.AddScoped(scheduledCommandRunnerType);
 
             // recurring command runner
             var recurringCommandRunnerType = typeof(RecurringCommandRunner<,>).MakeGenericType(commandType, resultType);
@@ -91,7 +93,7 @@ public static class DependencyInjection
 
         // Add Registries
         serviceCollection.AddScoped<CommandRunnerRegistry>();
-        serviceCollection.AddScoped<DelayedCommandRunnerRegistry>();
+        serviceCollection.AddScoped<ScheduledCommandRunnerRegistry>();
         serviceCollection.AddScoped<RecurringCommandRunnerRegistry>();
     }
 

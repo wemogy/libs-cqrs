@@ -9,23 +9,23 @@ namespace Wemogy.CQRS.Commands.Mediators;
 public class CommandsMediator : ICommands
 {
     private readonly CommandRunnerRegistry _commandRunnerRegistry;
-    private readonly DelayedCommandRunnerRegistry _delayedCommandRunnerRegistry;
+    private readonly ScheduledCommandRunnerRegistry _scheduledCommandRunnerRegistry;
     private readonly RecurringCommandRunnerRegistry _recurringCommandRunnerRegistry;
-    private readonly IDelayedJobService? _delayedJobService;
-    private readonly IRecurringJobService? _recurringJobService;
+    private readonly IScheduledCommandService? _scheduledCommandService;
+    private readonly IRecurringCommandService? _recurringCommandService;
 
     public CommandsMediator(
         CommandRunnerRegistry commandRunnerRegistry,
-        DelayedCommandRunnerRegistry delayedCommandRunnerRegistry,
+        ScheduledCommandRunnerRegistry scheduledCommandRunnerRegistry,
         RecurringCommandRunnerRegistry recurringCommandRunnerRegistry,
-        IDelayedJobService? delayedJobService = null,
-        IRecurringJobService? recurringJobService = null)
+        IScheduledCommandService? scheduledCommandService = null,
+        IRecurringCommandService? recurringCommandService = null)
     {
         _commandRunnerRegistry = commandRunnerRegistry;
-        _delayedCommandRunnerRegistry = delayedCommandRunnerRegistry;
+        _scheduledCommandRunnerRegistry = scheduledCommandRunnerRegistry;
         _recurringCommandRunnerRegistry = recurringCommandRunnerRegistry;
-        _delayedJobService = delayedJobService;
-        _recurringJobService = recurringJobService;
+        _scheduledCommandService = scheduledCommandService;
+        _recurringCommandService = recurringCommandService;
     }
 
     public Task<TResult> RunAsync<TResult>(ICommand<TResult> command)
@@ -33,55 +33,43 @@ public class CommandsMediator : ICommands
         return _commandRunnerRegistry.ExecuteCommandRunnerAsync(command);
     }
 
-    public Task<string> ScheduleDelayedAsync<TResult>(ICommand<TResult> command, TimeSpan delay)
+    public Task<string> ScheduleAsync<TResult>(ICommand<TResult> command, TimeSpan delay)
     {
-        return _delayedCommandRunnerRegistry.ExecuteDelayedCommandRunnerAsync(command, delay);
+        return _scheduledCommandRunnerRegistry.ExecuteScheduledCommandRunnerAsync(command, delay);
     }
 
-    public Task DeleteDelayedAsync(string jobId)
+    public Task DeleteScheduledAsync(string jobId)
     {
-        if (_delayedJobService == null)
+        if (_scheduledCommandService == null)
         {
             throw Error.Unexpected(
                 "DelayedJobServiceNotRegistered",
                 "DelayedJobService is not registered. Please register it in the DI container.");
         }
 
-        return _delayedJobService.CancelAsync(jobId);
+        return _scheduledCommandService.DeleteAsync(jobId);
     }
 
     public Task ScheduleRecurringAsync<TResult>(
-        string recurringCommandId,
+        string name,
         ICommand<TResult> command,
         string cronExpression)
     {
         return _recurringCommandRunnerRegistry.ExecuteRecurringCommandRunnerAsync(
-            recurringCommandId,
+            name,
             command,
             cronExpression);
     }
 
-    public Task TriggerRecurringAsync<TResult>(string recurringCommandId)
+    public Task DeleteRecurringAsync<TResult>(string name)
     {
-        if (_recurringJobService == null)
+        if (_recurringCommandService == null)
         {
             throw Error.Unexpected(
                 "RecurringJobServiceNotRegistered",
                 "RecurringJobService is not registered. Please register it in the DI container.");
         }
 
-        return _recurringJobService.TriggerAsync(recurringCommandId);
-    }
-
-    public Task DeleteRecurringIfExistsAsync<TResult>(string recurringCommandId)
-    {
-        if (_recurringJobService == null)
-        {
-            throw Error.Unexpected(
-                "RecurringJobServiceNotRegistered",
-                "RecurringJobService is not registered. Please register it in the DI container.");
-        }
-
-        return _recurringJobService.RemoveIfExistsAsync(recurringCommandId);
+        return _recurringCommandService.RemoveIfExistsAsync(name);
     }
 }

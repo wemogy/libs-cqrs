@@ -7,11 +7,11 @@ using Wemogy.CQRS.Commands.Abstractions;
 
 namespace Wemogy.CQRS.Extensions.Hangfire.Services
 {
-    public class HangfireDelayedJobService : IDelayedJobService
+    public class HangfireScheduledCommandService : IScheduledCommandService
     {
         private readonly IBackgroundJobClient _backgroundJobClient;
 
-        public HangfireDelayedJobService(IBackgroundJobClient backgroundJobClient)
+        public HangfireScheduledCommandService(IBackgroundJobClient backgroundJobClient)
         {
             _backgroundJobClient = backgroundJobClient;
         }
@@ -22,7 +22,7 @@ namespace Wemogy.CQRS.Extensions.Hangfire.Services
             return Task.FromResult(jobId);
         }
 
-        public Task CancelAsync(string jobId)
+        public Task DeleteAsync(string jobId)
         {
             _backgroundJobClient.ChangeState(jobId, new DeletedState());
             return Task.CompletedTask;

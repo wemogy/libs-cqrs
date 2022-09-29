@@ -29,8 +29,9 @@ public class RecurringCommandsTests
     {
         // Arrange
         var serviceCollection = new ServiceCollection();
-        serviceCollection.AddTestApplication();
-        serviceCollection.AddHangfireCQRSExtension();
+        serviceCollection
+            .AddTestApplication()
+            .AddHangfire();
 
         serviceCollection.AddHangfire(config =>
         {

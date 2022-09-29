@@ -6,11 +6,11 @@ using Wemogy.CQRS.Commands.Abstractions;
 
 namespace Wemogy.CQRS.Extensions.Hangfire.Services
 {
-    public class HangfireRecurringJobService : IRecurringJobService
+    public class HangfireRecurringCommandService : IRecurringCommandService
     {
         private readonly IRecurringJobManager _recurringJobManager;
 
-        public HangfireRecurringJobService(IRecurringJobManager recurringJobManager)
+        public HangfireRecurringCommandService(IRecurringJobManager recurringJobManager)
         {
             _recurringJobManager = recurringJobManager;
         }
@@ -18,12 +18,6 @@ namespace Wemogy.CQRS.Extensions.Hangfire.Services
         public Task AddOrUpdateAsync(string recurringJobId, Expression<Func<Task>> methodCall, string cronExpression)
         {
             _recurringJobManager.AddOrUpdate(recurringJobId, methodCall, cronExpression);
-            return Task.CompletedTask;
-        }
-
-        public Task TriggerAsync(string recurringJobId)
-        {
-            _recurringJobManager.Trigger(recurringJobId);
             return Task.CompletedTask;
         }
 

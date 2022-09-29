@@ -4,9 +4,9 @@ using System.Threading.Tasks;
 
 namespace Wemogy.CQRS.Commands.Abstractions;
 
-public interface IDelayedJobService
+public interface IScheduledCommandService
 {
     Task<string> ScheduleAsync(Expression<Func<Task>> methodCall, TimeSpan delay);
 
-    Task CancelAsync(string jobId);
+    Task DeleteAsync(string jobId);
 }

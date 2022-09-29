@@ -1,25 +1,29 @@
 using Microsoft.Extensions.DependencyInjection;
 using Wemogy.CQRS.Commands.Abstractions;
 using Wemogy.CQRS.Extensions.Hangfire.Services;
+using Wemogy.CQRS.Setup;
 
 namespace Wemogy.CQRS.Extensions.Hangfire
 {
     public static class DependencyInjection
     {
-        public static void AddHangfireCQRSExtension(
-            this IServiceCollection serviceCollection,
+        public static CQRSSetupEnvironment AddHangfire(
+            this CQRSSetupEnvironment setupEnvironment,
             bool enableRecurringJobService = true,
-            bool enableDelayedJobService = true)
+            bool enableScheduledJobService = true)
         {
+            var serviceCollection = setupEnvironment.ServiceCollection;
             if (enableRecurringJobService)
             {
-                serviceCollection.AddScoped<IRecurringJobService, HangfireRecurringJobService>();
+                serviceCollection.AddScoped<IRecurringCommandService, HangfireRecurringCommandService>();
             }
 
-            if (enableDelayedJobService)
+            if (enableScheduledJobService)
             {
-                serviceCollection.AddScoped<IDelayedJobService, HangfireDelayedJobService>();
+                serviceCollection.AddScoped<IScheduledCommandService, HangfireScheduledCommandService>();
             }
+
+            return setupEnvironment;
         }
     }
 }
