@@ -69,4 +69,3 @@ public class ScheduledCommandRunner<TCommand, TResult>
         await _postProcessingRunner.RunAsync(command, result);
     }
 }
-
