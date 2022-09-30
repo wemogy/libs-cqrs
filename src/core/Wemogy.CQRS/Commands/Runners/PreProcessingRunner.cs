@@ -23,9 +23,14 @@ public class PreProcessingRunner<TCommand, TResult>
 
     public async Task RunAsync(TCommand command)
     {
+        await RunPreChecksAsync(command);
+        await RunPreProcessorsAsync(command);
+    }
+
+    public async Task RunPreChecksAsync(TCommand command)
+    {
         await RunValidationProcessorsAsync(command);
         await RunAuthorizationProcessorsAsync(command);
-        await RunPreProcessorsAsync(command);
     }
 
     private async Task RunValidationProcessorsAsync(TCommand command)
@@ -44,7 +49,7 @@ public class PreProcessingRunner<TCommand, TResult>
         }
     }
 
-    private async Task RunPreProcessorsAsync(TCommand command)
+    public async Task RunPreProcessorsAsync(TCommand command)
     {
         foreach (var commandPreProcessor in _commandPreProcessors)
         {

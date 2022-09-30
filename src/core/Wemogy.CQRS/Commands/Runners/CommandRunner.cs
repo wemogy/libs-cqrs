@@ -15,9 +15,9 @@ public class CommandRunner<TCommand, TResult>
         ICommandHandler<TCommand, TResult> commandHandler,
         PostProcessingRunner<TCommand, TResult> postProcessingRunner)
     {
+        _preProcessingRunner = preProcessingRunner;
         _commandHandler = commandHandler;
         _postProcessingRunner = postProcessingRunner;
-        _preProcessingRunner = preProcessingRunner;
     }
 
     public async Task<TResult> RunAsync(TCommand command)
