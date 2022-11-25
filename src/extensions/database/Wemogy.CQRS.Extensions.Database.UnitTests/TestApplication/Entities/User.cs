@@ -27,6 +27,8 @@ public class User : EntityBase
         get
         {
             return new Faker<User>()
+                .RuleFor(x => x.CreatedAt, f => new DateTime(2022, 2, 3, 5, 6, 0, DateTimeKind.Utc))
+                .RuleFor(x => x.UpdatedAt, f => new DateTime(2022, 2, 3, 5, 6, 0, DateTimeKind.Utc))
                 .RuleFor(x => x.TenantId, f => f.Random.Guid().ToString())
                 .RuleFor(x => x.Firstname, f => f.Name.FirstName())
                 .RuleFor(x => x.Lastname, f => f.Name.LastName());
