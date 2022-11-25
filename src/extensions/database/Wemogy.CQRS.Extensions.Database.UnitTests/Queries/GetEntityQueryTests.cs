@@ -31,7 +31,7 @@ public class GetEntityQueryTests : QueryTestsBase
         // Arrange
         var user = User.Faker.Generate();
         await UserRepository.CreateAsync(user);
-        var getUserQuery = new GetUserQuery(Guid.NewGuid(), user.TenantId);
+        var getUserQuery = new GetUserQuery(Guid.NewGuid().ToString(), user.TenantId);
 
         // Act & Assert
         await Assert.ThrowsAsync<NotFoundErrorException>(() => Queries.QueryAsync(getUserQuery));
@@ -42,7 +42,7 @@ public class GetEntityQueryTests : QueryTestsBase
     {
         // Arrange
         var user = User.Faker.Generate();
-        user.Deleted = true;
+        user.IsDeleted = true;
         await UserRepository.CreateAsync(user);
         var getUserQuery = new GetUserQuery(user.Id, user.TenantId);
 

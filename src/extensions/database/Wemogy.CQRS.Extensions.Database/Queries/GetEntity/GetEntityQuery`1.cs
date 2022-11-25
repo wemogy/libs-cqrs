@@ -1,12 +1,15 @@
-using System;
+using Wemogy.CQRS.Queries.Abstractions;
 
-namespace Wemogy.CQRS.Extensions.Database.Queries.GetEntity
+namespace Wemogy.CQRS.Extensions.Database.Queries.GetEntity;
+
+public abstract class GetEntityQuery<TEntity> : IQuery<TEntity>
 {
-    public abstract class GetEntityQuery<TEntity> : GetEntityQuery<TEntity, Guid>
+    public string Id { get; }
+
+    protected GetEntityQuery(string id)
     {
-        protected GetEntityQuery(Guid id)
-            : base(id)
-        {
-        }
+        Id = id;
     }
+
+    public abstract string? GetPartitionKey();
 }
