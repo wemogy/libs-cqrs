@@ -45,7 +45,7 @@ public class HangfireDelayedJobServiceTests
         jobDataAfterDelete.State.Should().Be("Deleted");
     }
 
-    public Task DummyAction()
+    private Task DummyAction()
     {
         // No-op
         return Task.CompletedTask;
