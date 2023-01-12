@@ -6,10 +6,10 @@ namespace Wemogy.CQRS.UnitTests.TestApplication.Queries.GetUser;
 
 public class GetUserQuery : IQuery<User>
 {
-    public Guid Id { get; }
+    public string FirstName { get; }
 
-    public GetUserQuery(Guid id)
+    public GetUserQuery(string firstName)
     {
-        Id = id;
+        FirstName = firstName;
     }
 }

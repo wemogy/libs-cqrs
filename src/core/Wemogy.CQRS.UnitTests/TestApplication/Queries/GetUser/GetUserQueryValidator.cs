@@ -7,6 +7,6 @@ public class GetUserQueryValidator : FluentValidationQueryValidator<GetUserQuery
 {
     public GetUserQueryValidator()
     {
-        RuleFor(x => x.Id).Empty();
+        RuleFor(x => x.FirstName).NotEmpty().MinimumLength(10);
     }
 }
