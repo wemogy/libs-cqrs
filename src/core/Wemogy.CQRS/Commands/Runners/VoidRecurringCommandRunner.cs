@@ -4,18 +4,18 @@ using Wemogy.CQRS.Commands.Abstractions;
 
 namespace Wemogy.CQRS.Commands.Runners;
 
-public class RecurringCommandRunner<TCommand, TResult>
-    where TCommand : ICommand<TResult>
+public class VoidRecurringCommandRunner<TCommand>
+    where TCommand : ICommand
 {
     private readonly PreProcessingRunner<TCommand> _preProcessingRunner;
-    private readonly ICommandHandler<TCommand, TResult> _commandHandler;
-    private readonly PostProcessingRunner<TCommand, TResult> _postProcessingRunner;
+    private readonly ICommandHandler<TCommand> _commandHandler;
+    private readonly VoidPostProcessingRunner<TCommand> _postProcessingRunner;
     private readonly IRecurringCommandService? _recurringCommandService;
 
-    public RecurringCommandRunner(
+    public VoidRecurringCommandRunner(
         PreProcessingRunner<TCommand> preProcessingRunner,
-        ICommandHandler<TCommand, TResult> commandHandler,
-        PostProcessingRunner<TCommand, TResult> postProcessingRunner,
+        ICommandHandler<TCommand> commandHandler,
+        VoidPostProcessingRunner<TCommand> postProcessingRunner,
         IRecurringCommandService? recurringCommandService = null)
     {
         _preProcessingRunner = preProcessingRunner;
@@ -49,9 +49,9 @@ public class RecurringCommandRunner<TCommand, TResult>
         await _preProcessingRunner.RunPreProcessorsAsync(command);
 
         // processing
-        var result = await _commandHandler.HandleAsync(command);
+        await _commandHandler.HandleAsync(command);
 
         // post-processing
-        await _postProcessingRunner.RunAsync(command, result);
+        await _postProcessingRunner.RunAsync(command);
     }
 }

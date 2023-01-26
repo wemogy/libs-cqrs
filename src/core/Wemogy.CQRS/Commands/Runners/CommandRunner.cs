@@ -6,12 +6,12 @@ namespace Wemogy.CQRS.Commands.Runners;
 public class CommandRunner<TCommand, TResult>
     where TCommand : ICommand<TResult>
 {
-    private readonly PreProcessingRunner<TCommand, TResult> _preProcessingRunner;
+    private readonly PreProcessingRunner<TCommand> _preProcessingRunner;
     private readonly ICommandHandler<TCommand, TResult> _commandHandler;
     private readonly PostProcessingRunner<TCommand, TResult> _postProcessingRunner;
 
     public CommandRunner(
-        PreProcessingRunner<TCommand, TResult> preProcessingRunner,
+        PreProcessingRunner<TCommand> preProcessingRunner,
         ICommandHandler<TCommand, TResult> commandHandler,
         PostProcessingRunner<TCommand, TResult> postProcessingRunner)
     {

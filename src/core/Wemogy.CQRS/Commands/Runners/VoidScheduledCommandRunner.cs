@@ -6,20 +6,20 @@ using Wemogy.CQRS.Common.ValueObjects;
 
 namespace Wemogy.CQRS.Commands.Runners;
 
-public class ScheduledCommandRunner<TCommand, TResult>
-    where TCommand : ICommand<TResult>
+public class VoidScheduledCommandRunner<TCommand>
+    where TCommand : ICommand
 {
     private readonly IScheduledCommandDependencyResolver _scheduledCommandDependencyResolver;
     private readonly PreProcessingRunner<TCommand> _preProcessingRunner;
-    private readonly ICommandHandler<TCommand, TResult> _commandHandler;
-    private readonly PostProcessingRunner<TCommand, TResult> _postProcessingRunner;
+    private readonly ICommandHandler<TCommand> _commandHandler;
+    private readonly VoidPostProcessingRunner<TCommand> _postProcessingRunner;
     private readonly IScheduledCommandService? _scheduledCommandService;
 
-    public ScheduledCommandRunner(
+    public VoidScheduledCommandRunner(
         IScheduledCommandDependencyResolver scheduledCommandDependencyResolver,
         PreProcessingRunner<TCommand> preProcessingRunner,
-        ICommandHandler<TCommand, TResult> commandHandler,
-        PostProcessingRunner<TCommand, TResult> postProcessingRunner,
+        ICommandHandler<TCommand> commandHandler,
+        VoidPostProcessingRunner<TCommand> postProcessingRunner,
         IScheduledCommandService? scheduledCommandService = null)
     {
         _scheduledCommandDependencyResolver = scheduledCommandDependencyResolver;
@@ -62,9 +62,9 @@ public class ScheduledCommandRunner<TCommand, TResult>
         await _preProcessingRunner.RunPreProcessorsAsync(command);
 
         // processing
-        var result = await _commandHandler.HandleAsync(command);
+        await _commandHandler.HandleAsync(command);
 
         // post-processing
-        await _postProcessingRunner.RunAsync(command, result);
+        await _postProcessingRunner.RunAsync(command);
     }
 }
