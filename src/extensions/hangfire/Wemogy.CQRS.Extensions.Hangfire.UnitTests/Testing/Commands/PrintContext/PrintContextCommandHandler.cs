@@ -22,7 +22,7 @@ public class PrintContextCommandHandler : ICommandHandler<PrintContextCommand>
         _myTestingContext = myTestingContext;
     }
 
-    public Task<Void> HandleAsync(PrintContextCommand command)
+    public Task HandleAsync(PrintContextCommand command)
     {
         ExecutedCount++;
         Console.WriteLine($"Context: {_myTestingContext.Name}");
