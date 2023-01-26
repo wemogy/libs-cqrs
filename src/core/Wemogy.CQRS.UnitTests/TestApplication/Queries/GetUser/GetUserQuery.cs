@@ -1,4 +1,3 @@
-using System;
 using Wemogy.CQRS.Queries.Abstractions;
 using Wemogy.CQRS.UnitTests.TestApplication.Common.Entities;
 

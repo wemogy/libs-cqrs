@@ -38,15 +38,15 @@ public class QueriesMediatorTests
         serviceCollection.AddTestApplication();
         var serviceProvider = serviceCollection.BuildServiceProvider();
         var queries = serviceProvider.GetRequiredService<IQueries>();
-        var firstName = Guid.NewGuid().ToString()[..9];
+        var firstName = "abc";
         var getUserQuery = new GetUserQuery(firstName);
 
         // Act
         var exception = await Record.ExceptionAsync(() => queries.QueryAsync(getUserQuery));
 
         // Assert
-        exception.Should().NotBeNull();
-        exception.Should().BeOfType<FluentValidation.ValidationException>();
-        exception.Message.Should().Contain(nameof(GetUserQuery.FirstName));
+        exception.Should().NotBeNull()
+            .And.BeOfType<FluentValidation.ValidationException>()
+            .Which.Message.Should().Contain(nameof(GetUserQuery.FirstName));
     }
 }

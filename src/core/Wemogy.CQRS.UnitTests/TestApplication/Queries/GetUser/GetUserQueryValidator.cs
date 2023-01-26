@@ -3,7 +3,7 @@ using Wemogy.CQRS.Queries.Abstractions;
 
 namespace Wemogy.CQRS.UnitTests.TestApplication.Queries.GetUser;
 
-public class GetUserQueryValidator : FluentValidationQueryValidator<GetUserQuery>, IQueryValidator<GetUserQuery>
+public class GetUserQueryValidator : FluentValidationQueryValidator<GetUserQuery>
 {
     public GetUserQueryValidator()
     {
