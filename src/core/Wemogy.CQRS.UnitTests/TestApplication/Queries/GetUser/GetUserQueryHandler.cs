@@ -11,7 +11,7 @@ public class GetUserQueryHandler : IQueryHandler<GetUserQuery, User>
     {
         var user = new User()
         {
-            Firstname = query.Id.ToString(),
+            Firstname = query.FirstName
         };
         return Task.FromResult(user);
     }

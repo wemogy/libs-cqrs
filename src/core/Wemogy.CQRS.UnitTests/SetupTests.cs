@@ -7,6 +7,7 @@ using Wemogy.CQRS.Queries.Abstractions;
 using Wemogy.CQRS.UnitTests.TestApplication;
 using Wemogy.CQRS.UnitTests.TestApplication.Commands.CreateUser;
 using Wemogy.CQRS.UnitTests.TestApplication.Common.Entities;
+using Wemogy.CQRS.UnitTests.TestApplication.Queries.GetUser;
 using Xunit;
 
 namespace Wemogy.CQRS.UnitTests;
@@ -39,6 +40,7 @@ public class SetupTests
         serviceProvider.GetService<ICommands>().Should().NotBeNull();
 
         // Queries
+        serviceProvider.GetRequiredService<List<IQueryValidator<GetUserQuery>>>().Should().HaveCount(1);
         serviceProvider.GetService<IQueries>().Should().NotBeNull();
     }
 }

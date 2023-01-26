@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
@@ -131,6 +132,9 @@ public static class DependencyInjection
             }
 
             var resultType = genericQueryType.GenericTypeArguments[0];
+
+            // validators
+            serviceCollection.AddImplementationCollection(assembly, queryType, typeof(IQueryValidator<>));
 
             // handlers
             var queryHandlerType = typeof(IQueryHandler<,>).MakeGenericType(queryType, resultType);
