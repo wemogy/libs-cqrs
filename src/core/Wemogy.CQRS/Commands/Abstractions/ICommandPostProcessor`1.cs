@@ -2,8 +2,8 @@ using System.Threading.Tasks;
 
 namespace Wemogy.CQRS.Commands.Abstractions;
 
-public interface ICommandHandler<in TCommand>
+public interface ICommandPostProcessor<in TCommand>
     where TCommand : ICommand
 {
-    public Task HandleAsync(TCommand command);
+    public Task ProcessAsync(TCommand command);
 }

@@ -4,8 +4,8 @@ using Wemogy.CQRS.Commands.Abstractions;
 
 namespace Wemogy.CQRS.Commands.Runners;
 
-public class PreProcessingRunner<TCommand, TResult>
-    where TCommand : ICommand<TResult>
+public class PreProcessingRunner<TCommand>
+    where TCommand : ICommandBase
 {
     private readonly List<ICommandValidator<TCommand>> _commandValidators;
     private readonly List<ICommandAuthorization<TCommand>> _commandAuthorizations;
