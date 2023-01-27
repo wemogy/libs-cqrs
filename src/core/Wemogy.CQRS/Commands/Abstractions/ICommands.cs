@@ -7,13 +7,15 @@ public interface ICommands
 {
     Task<TResult> RunAsync<TResult>(ICommand<TResult> command);
 
+    Task RunAsync(ICommand command);
+
     // Task EnqueueAsync<TResult>(ICommand<TResult> command);
 
     /// <summary>
     /// Schedules a command to be executed after a specified delay in a background-job
     /// </summary>
     /// <returns>The ID of the scheduled job</returns>
-    Task<string> ScheduleAsync<TResult>(ICommand<TResult> command, TimeSpan delay);
+    Task<string> ScheduleAsync(ICommandBase command, TimeSpan delay);
 
     Task DeleteScheduledAsync(string jobId);
 
@@ -24,11 +26,11 @@ public interface ICommands
     /// <param name="name">The unique name to identify the recurring job</param>
     /// <param name="command">The command which should be executed</param>
     /// <param name="cronExpression">The interval</param>
-    Task ScheduleRecurringAsync<TResult>(string name, ICommand<TResult> command, string cronExpression);
+    Task ScheduleRecurringAsync(string name, ICommandBase command, string cronExpression);
 
     /// <summary>
     /// Removes a stored recurring background-job if it exists
     /// </summary>
     /// <param name="name">The unique name to identify the recurring job</param>
-    Task DeleteRecurringAsync<TResult>(string name);
+    Task DeleteRecurringAsync(string name);
 }
