@@ -19,8 +19,8 @@ public class ScheduledCommandRunnerRegistry : RegistryBase<Type, TypeMethodRegis
         _serviceProvider = serviceProvider;
     }
 
-    public Task<string> ExecuteScheduledCommandRunnerAsync<TResult>(
-        ICommand<TResult> command,
+    public Task<string> ExecuteScheduledCommandRunnerAsync(
+        ICommandBase command,
         TimeSpan delay)
     {
         var scheduledCommandRunnerEntry = GetScheduledCommandRunnerEntry(command);
@@ -30,16 +30,16 @@ public class ScheduledCommandRunnerRegistry : RegistryBase<Type, TypeMethodRegis
             delay);
     }
 
-    private TypeMethodRegistryEntry GetScheduledCommandRunnerEntry<TResult>(ICommand<TResult> command)
+    private TypeMethodRegistryEntry GetScheduledCommandRunnerEntry(ICommandBase command)
     {
         var commandType = command.GetType();
         var scheduledCommandRunnerEntry = GetRegistryEntry(commandType);
         return scheduledCommandRunnerEntry;
     }
 
-    private Task<string> ExecuteScheduledCommandRunnerAsync<TResult>(
+    private Task<string> ExecuteScheduledCommandRunnerAsync(
         TypeMethodRegistryEntry scheduledCommandRunnerEntry,
-        ICommand<TResult> command,
+        ICommandBase command,
         TimeSpan delay)
     {
         object scheduledCommandRunner = _serviceProvider.GetRequiredService(scheduledCommandRunnerEntry.Type);
@@ -54,10 +54,22 @@ public class ScheduledCommandRunnerRegistry : RegistryBase<Type, TypeMethodRegis
 
     protected override TypeMethodRegistryEntry InitializeEntry(Type commandType)
     {
-        commandType.InheritsOrImplements(typeof(ICommand<>), out var resultType);
-        var scheduledCommandRunnerType =
-            typeof(ScheduledCommandRunner<,>).MakeGenericType(commandType, resultType?.GenericTypeArguments[0]);
-        var runAsyncMethod = scheduledCommandRunnerType.GetMethods().First(x => x.Name == "ScheduleAsync");
-        return new TypeMethodRegistryEntry(scheduledCommandRunnerType, runAsyncMethod);
+        if (commandType.InheritsOrImplements(typeof(ICommand<>), out var resultType))
+        {
+            var scheduledCommandRunnerType =
+                typeof(ScheduledCommandRunner<,>).MakeGenericType(commandType, resultType?.GenericTypeArguments[0]);
+            var runAsyncMethod = scheduledCommandRunnerType.GetMethods().First(x => x.Name == "ScheduleAsync");
+            return new TypeMethodRegistryEntry(scheduledCommandRunnerType, runAsyncMethod);
+        }
+
+        if (commandType.InheritsOrImplements(typeof(ICommand)))
+        {
+            var scheduledCommandRunnerType =
+                typeof(VoidScheduledCommandRunner<>).MakeGenericType(commandType);
+            var runAsyncMethod = scheduledCommandRunnerType.GetMethods().First(x => x.Name == "ScheduleAsync");
+            return new TypeMethodRegistryEntry(scheduledCommandRunnerType, runAsyncMethod);
+        }
+
+        throw new ArgumentException($"Command type {commandType} is not a valid command type.");
     }
 }

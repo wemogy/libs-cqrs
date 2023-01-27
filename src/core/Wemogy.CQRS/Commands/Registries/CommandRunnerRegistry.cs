@@ -19,6 +19,26 @@ public class CommandRunnerRegistry : RegistryBase<Type, TypeMethodRegistryEntry>
         _serviceProvider = serviceProvider;
     }
 
+    public Task ExecuteCommandRunnerAsync(ICommand command)
+    {
+        var commandRunnerEntry = GetCommandRunnerEntry(command);
+        return ExecuteCommandRunnerAsync(commandRunnerEntry, command);
+    }
+
+    private TypeMethodRegistryEntry GetCommandRunnerEntry(ICommand command)
+    {
+        var commandType = command.GetType();
+        var commandRunnerEntry = GetRegistryEntry(commandType);
+        return commandRunnerEntry;
+    }
+
+    private Task ExecuteCommandRunnerAsync(TypeMethodRegistryEntry commandRunnerEntry, ICommand command)
+    {
+        object commandRunner = _serviceProvider.GetRequiredService(commandRunnerEntry.Type);
+        dynamic res = commandRunnerEntry.Method.Invoke(commandRunner, new object[] { command });
+        return res;
+    }
+
     public Task<TResult> ExecuteCommandRunnerAsync<TResult>(ICommand<TResult> command)
     {
         var commandRunnerEntry = GetCommandRunnerEntry(command);
@@ -41,10 +61,22 @@ public class CommandRunnerRegistry : RegistryBase<Type, TypeMethodRegistryEntry>
 
     protected override TypeMethodRegistryEntry InitializeEntry(Type commandType)
     {
-        commandType.InheritsOrImplements(typeof(ICommand<>), out var resultType);
-        var commandRunnerType =
-            typeof(CommandRunner<,>).MakeGenericType(commandType, resultType?.GenericTypeArguments[0]);
-        var runAsyncMethod = commandRunnerType.GetMethods().First(x => x.Name == "RunAsync");
-        return new TypeMethodRegistryEntry(commandRunnerType, runAsyncMethod);
+        if (commandType.InheritsOrImplements(typeof(ICommand<>), out var resultType))
+        {
+            var commandRunnerType =
+                typeof(CommandRunner<,>).MakeGenericType(commandType, resultType?.GenericTypeArguments[0]);
+            var runAsyncMethod = commandRunnerType.GetMethods().First(x => x.Name == "RunAsync");
+            return new TypeMethodRegistryEntry(commandRunnerType, runAsyncMethod);
+        }
+
+        if (commandType.InheritsOrImplements(typeof(ICommand)))
+        {
+            var commandRunnerType =
+                typeof(VoidCommandRunner<>).MakeGenericType(commandType);
+            var runAsyncMethod = commandRunnerType.GetMethods().First(x => x.Name == "RunAsync");
+            return new TypeMethodRegistryEntry(commandRunnerType, runAsyncMethod);
+        }
+
+        throw new ArgumentException($"Command type {commandType} is not a valid command type.");
     }
 }
