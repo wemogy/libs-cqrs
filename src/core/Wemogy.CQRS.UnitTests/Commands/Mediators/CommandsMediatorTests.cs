@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Wemogy.CQRS.Commands.Abstractions;
 using Wemogy.CQRS.UnitTests.TestApplication;
 using Wemogy.CQRS.UnitTests.TestApplication.Commands.CreateUser;
+using Wemogy.CQRS.UnitTests.TestApplication.Commands.TrackUserLogin;
 using Xunit;
 
 namespace Wemogy.CQRS.UnitTests.Commands.Mediators;
@@ -29,5 +30,22 @@ public class CommandsMediatorTests
 
         // Assert
         res.Firstname.Should().Be(createUserCommand.Firstname);
+    }
+
+    [Fact]
+    public async Task RunAsync_ShouldReturnSupportVoidCommands()
+    {
+        // Arrange
+        var serviceCollection = new ServiceCollection();
+        serviceCollection.AddTestApplication();
+        var serviceProvider = serviceCollection.BuildServiceProvider();
+        var commandsMediator = serviceProvider.GetRequiredService<ICommands>();
+        var createUserCommand = new TrackUserLoginCommand(string.Empty);
+
+        // Act
+        var exception = await Record.ExceptionAsync(() => commandsMediator.RunAsync(createUserCommand));
+
+        // Assert
+        exception.Should().BeNull();
     }
 }

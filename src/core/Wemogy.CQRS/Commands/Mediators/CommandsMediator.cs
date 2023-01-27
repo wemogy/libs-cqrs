@@ -33,7 +33,12 @@ public class CommandsMediator : ICommands
         return _commandRunnerRegistry.ExecuteCommandRunnerAsync(command);
     }
 
-    public Task<string> ScheduleAsync<TResult>(ICommand<TResult> command, TimeSpan delay)
+    public Task RunAsync(ICommand command)
+    {
+        return _commandRunnerRegistry.ExecuteCommandRunnerAsync(command);
+    }
+
+    public Task<string> ScheduleAsync(ICommandBase command, TimeSpan delay)
     {
         return _scheduledCommandRunnerRegistry.ExecuteScheduledCommandRunnerAsync(command, delay);
     }
@@ -50,9 +55,9 @@ public class CommandsMediator : ICommands
         return _scheduledCommandService.DeleteAsync(jobId);
     }
 
-    public Task ScheduleRecurringAsync<TResult>(
+    public Task ScheduleRecurringAsync(
         string name,
-        ICommand<TResult> command,
+        ICommandBase command,
         string cronExpression)
     {
         return _recurringCommandRunnerRegistry.ExecuteRecurringCommandRunnerAsync(
@@ -61,7 +66,7 @@ public class CommandsMediator : ICommands
             cronExpression);
     }
 
-    public Task DeleteRecurringAsync<TResult>(string name)
+    public Task DeleteRecurringAsync(string name)
     {
         if (_recurringCommandService == null)
         {
