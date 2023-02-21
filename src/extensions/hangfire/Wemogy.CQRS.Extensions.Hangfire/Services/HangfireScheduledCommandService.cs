@@ -2,6 +2,7 @@ using System;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Hangfire;
+using Hangfire.Common;
 using Hangfire.States;
 using Wemogy.CQRS.Commands.Abstractions;
 
@@ -18,7 +19,17 @@ namespace Wemogy.CQRS.Extensions.Hangfire.Services
 
         public Task<string> ScheduleAsync(Expression<Func<Task>> methodCall, TimeSpan delay)
         {
-            var jobId = _backgroundJobClient.Create(methodCall, new ScheduledState(delay));
+            string jobId;
+
+            if (delay == TimeSpan.Zero)
+            {
+                jobId = _backgroundJobClient.Enqueue(methodCall);
+            }
+            else
+            {
+                jobId = _backgroundJobClient.Create(methodCall, new ScheduledState(delay));
+            }
+
             return Task.FromResult(jobId);
         }
 
