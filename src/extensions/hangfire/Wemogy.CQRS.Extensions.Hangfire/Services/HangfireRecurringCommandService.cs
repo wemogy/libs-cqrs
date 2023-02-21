@@ -17,7 +17,7 @@ namespace Wemogy.CQRS.Extensions.Hangfire.Services
 
         public Task AddOrUpdateAsync(string recurringJobId, Expression<Func<Task>> methodCall, string cronExpression)
         {
-            _recurringJobManager.AddOrUpdate(recurringJobId, methodCall, cronExpression);
+            _recurringJobManager.AddOrUpdate(recurringJobId, methodCall, cronExpression, TimeZoneInfo.Utc);
             return Task.CompletedTask;
         }
 
