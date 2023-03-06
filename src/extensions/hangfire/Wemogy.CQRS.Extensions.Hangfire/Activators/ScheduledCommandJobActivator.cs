@@ -42,7 +42,7 @@ namespace Wemogy.CQRS.Extensions.Hangfire.Activators
 
                         if (dependency == null)
                         {
-                            throw Error.Unexpected("DependencyNotFound", "IRealtimeSpaceBlocksContext dependency not found");
+                            throw Error.Unexpected("DependencyNotFound", $"{scheduledCommandDependency.Key} dependency not found");
                         }
 
                         return dependency;
