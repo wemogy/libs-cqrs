@@ -41,6 +41,7 @@ public class SetupTests
 
         // Queries
         serviceProvider.GetRequiredService<List<IQueryValidator<GetUserQuery>>>().Should().HaveCount(1);
+        serviceProvider.GetRequiredService<List<IQueryAuthorization<GetUserQuery>>>().Should().HaveCount(1);
         serviceProvider.GetService<IQueries>().Should().NotBeNull();
     }
 }
