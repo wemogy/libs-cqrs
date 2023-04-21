@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
+using Wemogy.Core.Errors.Exceptions;
 using Wemogy.CQRS.Queries.Abstractions;
 using Wemogy.CQRS.UnitTests.TestApplication;
 using Wemogy.CQRS.UnitTests.TestApplication.Queries.GetUser;
@@ -28,6 +29,24 @@ public class QueriesMediatorTests
 
         // Assert
         user.Firstname.Should().Be(firstName);
+    }
+
+    [Fact]
+    public async Task QueryAsync_Authorization_ShouldWork()
+    {
+        // Arrange
+        var serviceCollection = new ServiceCollection();
+        serviceCollection.AddTestApplication();
+        var serviceProvider = serviceCollection.BuildServiceProvider();
+        var queries = serviceProvider.GetRequiredService<IQueries>();
+        var firstName = "ThrowExceptionInGetUserQueryAuthorization";
+        var getUserQuery = new GetUserQuery(firstName);
+
+        // Act
+        var exception = await Record.ExceptionAsync(() => queries.QueryAsync(getUserQuery));
+
+        // Assert
+        exception.Should().NotBeNull().And.BeOfType<AuthorizationErrorException>();
     }
 
     [Fact]
