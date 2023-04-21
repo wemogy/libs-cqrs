@@ -10,13 +10,16 @@ public class QueryRunner<TQuery, TResult>
 {
     private readonly IQueryHandler<TQuery, TResult> _queryHandler;
     private readonly List<IQueryValidator<TQuery>> _queryValidators;
+    private readonly List<IQueryAuthorization<TQuery>> _queryAuthorizations;
 
     public QueryRunner(
         IQueryHandler<TQuery, TResult> queryHandler,
-        List<IQueryValidator<TQuery>> queryValidators)
+        List<IQueryValidator<TQuery>> queryValidators,
+        List<IQueryAuthorization<TQuery>> queryAuthorizations)
     {
         _queryHandler = queryHandler;
         _queryValidators = queryValidators;
+        _queryAuthorizations = queryAuthorizations;
     }
 
     public async Task<TResult> QueryAsync(TQuery query, CancellationToken cancellationToken)
@@ -24,6 +27,11 @@ public class QueryRunner<TQuery, TResult>
         foreach (var validator in _queryValidators)
         {
             validator.Validate(query);
+        }
+
+        foreach (var authorization in _queryAuthorizations)
+        {
+            await authorization.AuthorizeAsync(query);
         }
 
         var result = await _queryHandler.HandleAsync(query, cancellationToken);

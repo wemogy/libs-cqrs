@@ -136,6 +136,9 @@ public static class DependencyInjection
             // validators
             serviceCollection.AddImplementationCollection(assembly, queryType, typeof(IQueryValidator<>));
 
+            // authorization
+            serviceCollection.AddImplementationCollection(assembly, queryType, typeof(IQueryAuthorization<>));
+
             // handlers
             var queryHandlerType = typeof(IQueryHandler<,>).MakeGenericType(queryType, resultType);
             var queryHandlers = assembly.GetClassTypesWhichImplementInterface(queryHandlerType);
