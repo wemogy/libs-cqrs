@@ -40,7 +40,7 @@ Each Command needs a Command Handler, which handles the execution of a Command. 
 public class FooCommandHandler : ICommandHandler<FooCommand, string>
 {
     private readonly MyExternalApi _client;
-    
+
     public FooQueryHandler(MyExternalApi client)
     {
         _client = client;
@@ -67,7 +67,7 @@ public class Demo
         Commands = commands;
         Queries = queries;
     }
-    
+
     public async Task<string> Something()
     {
         var command = new FooCommand("bar");
@@ -99,7 +99,7 @@ Each Query needs a Query Handler, which handles the execution of a Query. To cre
 public class FooQueryHandler : IQueryHandler<FooQuery, string>
 {
     private readonly MyDatabaseClient _client;
-    
+
     public FooQueryHandler(MyDatabaseClient client)
     {
         _client = client;
@@ -127,7 +127,7 @@ public class Demo
         Commands = commands;
         Queries = queries;
     }
-    
+
     public async Task<string> GetSomething()
     {
         var query = new FooQuery("bar");
