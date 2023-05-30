@@ -16,7 +16,7 @@ Add CQRS to your dependency Injection container.
 services.AddCQRS();
 ```
 
-This scans your assembly for all Comamnds, Queries, Command Handlers, Query Handlers, and so on and adds them to the DI containers along with the `ICommands` and `IQueries` executioners.
+This scans the calling assembly for all Commands, Queries, Command Handlers, Query Handlers, and so on and adds them to the DI containers along with the `ICommands` and `IQueries` executioners.
 
 ## Commands
 
@@ -54,7 +54,7 @@ public class FooCommandHandler : ICommandHandler<FooCommand, string>
 }
 ```
 
-To execute a Command, get the `ICommands` executioner from the DI, instanciate the Command and pass it to the executioner.
+To execute a Command, get the `ICommands` executioner from the DI, instantiate the Command and pass it to the executioner.
 
 ```csharp
 public class Demo
@@ -114,7 +114,7 @@ public class FooQueryHandler : IQueryHandler<FooQuery, string>
 }
 ```
 
-To execute a Query, get the `IQueries` executioner from the DI, instanciate the Query and pass it to the executioner.
+To execute a Query, get the `IQueries` executioner from the DI, instantiate the Query and pass it to the executioner.
 
 ```csharp
 public class Demo
