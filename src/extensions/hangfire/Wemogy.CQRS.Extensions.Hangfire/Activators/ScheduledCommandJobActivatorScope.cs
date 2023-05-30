@@ -18,5 +18,11 @@ namespace Wemogy.CQRS.Extensions.Hangfire.Activators
             var inst = ActivatorUtilities.CreateInstance(_serviceScope.ServiceProvider, type);
             return inst;
         }
+
+        public override void DisposeScope()
+        {
+            _serviceScope.Dispose();
+            base.DisposeScope();
+        }
     }
 }
