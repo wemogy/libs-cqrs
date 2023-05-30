@@ -24,13 +24,12 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       # Nuget
       - name: Build .NET
         uses: ./.github/actions/dotnet
         with:
-          wemogy-packages-token: ${{ secrets.WEMOGY_PACKAGES_TOKEN }}
           version: ${{ steps.release-version.outputs.next-version }}${{ github.event.inputs.version && 'pre' || '' }}
       - name: Create Nuget package(s)
         run: dotnet pack --configuration Release /p:VersionPrefix=${{ steps.release-version.outputs.next-version }}${{ github.event.inputs.version && 'pre' || '' }}
@@ -41,7 +40,7 @@ jobs:
 
       # Update Documentation
       - name: Use Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: "16.x"
       - run: yarn install
