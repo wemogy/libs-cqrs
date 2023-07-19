@@ -4,72 +4,9 @@
 
 TBD...
 
-### Hello world sample
+## Principles
 
-In this little sample of `Wemogy.CQRS` we will implement a query without parameters with the belonging query handler. Moreover we will register `wemogy.CQRS` in the dependency injection and finally execute the query to get a `Hello World!` string back.
-
-#### The Query model
-
-For each query its required to create a model of the query itself, which contains all information which are required to execute the query.
-
-```csharp
-using Wemogy.CQRS.Queries.Abstractions;
-
-public class HelloWorldQuery : IQuery<string>
-{
-}
-```
-
-#### The Query handler
-
-The second mandatory implementation for a query is a query handler, which contains the actual implementation of the query action.
-
-```csharp
-using System.Threading.Tasks;
-using Wemogy.CQRS.Queries.Abstractions;
-
-public class HelloWorldQueryHandler : IQueryHandler<HelloWorldQuery, string>
-{
-  public Task<string> HandleAsync(HelloWorldQuery query)
-  {
-    return "Hello world!";
-  }
-}
-```
-
-#### Registering the query
-
-It's required to execute `services.AddCQRS();` in your dependency injection file of the assembly which contains the queries. In addition its also supported to pass one or multiple assemblies to the `AddCQRS()` extension method, in case that you need to call it from another assembly.
-
-#### Executing the query
-
-This sample is part of a .NET Core controller class.
-
-```csharp
-using Wemogy.CQRS.Queries.Abstractions;
-
-public class HelloWorldController : ControllerBase
-{
-  private readonly IQueries _queries;
-
-  public HelloWorldController(IQueries queries)
-  {
-    _queries = queries;
-  }
-
-  [HttpGet]
-  public async Task<ActionResult> SayHelloWorld()
-  {
-    // creating the query with all required information
-    var helloWorldQuery = new HelloWorldQuery();
-
-    // executing the query though the IQueries mediator
-    var result = await _queries.QueryAsync(helloWorldQuery);
-
-    return Ok(result);
-  }
-}
-```
+- A Query should always only work exactly one way and not support multiple constuctors or execution ways (ref [GitHub Issue](https://github.com/wemogy/libs-cqrs/issues/51))
 
 ## Query definition
 
@@ -139,6 +76,74 @@ If your query internally talks to a `IDatabaseRepository` service, it's recommen
 #### Custom filter
 
 If your query internally talks to an external API or any other custom data source and you need to filter the results based on the current context, it's recommended to implement this filtering logic in the wrapper implementation of the specific data source.
+
+
+## Example: Hello world
+
+In this little sample of `Wemogy.CQRS` we will implement a query without parameters with the belonging query handler. Moreover we will register `wemogy.CQRS` in the dependency injection and finally execute the query to get a `Hello World!` string back.
+
+### The Query model
+
+For each query its required to create a model of the query itself, which contains all information which are required to execute the query.
+
+```csharp
+using Wemogy.CQRS.Queries.Abstractions;
+
+public class HelloWorldQuery : IQuery<string>
+{
+}
+```
+
+### The Query handler
+
+The second mandatory implementation for a query is a query handler, which contains the actual implementation of the query action.
+
+```csharp
+using System.Threading.Tasks;
+using Wemogy.CQRS.Queries.Abstractions;
+
+public class HelloWorldQueryHandler : IQueryHandler<HelloWorldQuery, string>
+{
+  public Task<string> HandleAsync(HelloWorldQuery query)
+  {
+    return "Hello world!";
+  }
+}
+```
+
+### Registering the query
+
+It's required to execute `services.AddCQRS();` in your dependency injection file of the assembly which contains the queries. In addition its also supported to pass one or multiple assemblies to the `AddCQRS()` extension method, in case that you need to call it from another assembly.
+
+### Executing the query
+
+This sample is part of a .NET Core controller class.
+
+```csharp
+using Wemogy.CQRS.Queries.Abstractions;
+
+public class HelloWorldController : ControllerBase
+{
+  private readonly IQueries _queries;
+
+  public HelloWorldController(IQueries queries)
+  {
+    _queries = queries;
+  }
+
+  [HttpGet]
+  public async Task<ActionResult> SayHelloWorld()
+  {
+    // creating the query with all required information
+    var helloWorldQuery = new HelloWorldQuery();
+
+    // executing the query though the IQueries mediator
+    var result = await _queries.QueryAsync(helloWorldQuery);
+
+    return Ok(result);
+  }
+}
+```
 
 ## FAQ
 
