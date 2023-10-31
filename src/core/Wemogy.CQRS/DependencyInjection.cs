@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
@@ -102,13 +101,13 @@ public static class DependencyInjection
                 // post-processing
                 serviceCollection.AddPostProcessing(assembly, commandType, resultType);
             }
-
-            // ScheduledCommandDependencyResolver
-            serviceCollection.AddSingleton(
-                new ScheduledCommandDependencies(dependencies));
-            serviceCollection.AddScoped<IScheduledCommandDependencyResolver>(provider =>
-                new ScheduledCommandDependencyResolver(provider, dependencies));
         }
+
+        // ScheduledCommandDependencyResolver
+        serviceCollection.AddSingleton(
+            new ScheduledCommandDependencies(dependencies));
+        serviceCollection.AddScoped<IScheduledCommandDependencyResolver>(provider =>
+            new ScheduledCommandDependencyResolver(provider, dependencies));
 
         // Add ICommands mediator
         serviceCollection.AddScoped<ICommands, CommandsMediator>();
