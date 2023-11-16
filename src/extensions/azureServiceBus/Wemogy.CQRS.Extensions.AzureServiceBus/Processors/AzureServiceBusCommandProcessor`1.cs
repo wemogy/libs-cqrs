@@ -1,5 +1,6 @@
 using System;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,7 +13,7 @@ using Wemogy.CQRS.Extensions.AzureServiceBus.Abstractions;
 
 namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
 {
-    public class AzureServiceBusCommandProcessor<TCommand> : IAzureServiceBusCommandProcessor
+    public class AzureServiceBusCommandProcessor<TCommand> : IAzureServiceBusCommandProcessorHostedService<TCommand>
         where TCommand : ICommandBase
     {
         private readonly ServiceBusProcessor _serviceBusProcessor;
@@ -34,7 +35,6 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
             _scheduledCommandDependencies = serviceCollection
                 .BuildServiceProvider()
                 .GetRequiredService<ScheduledCommandDependencies>();
-            _serviceBusProcessor.StartProcessingAsync();
         }
 
         public async Task HandleMessageAsync(ProcessMessageEventArgs arg)
@@ -86,6 +86,16 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
                 Console.WriteLine(e);
                 throw;
             }
+        }
+
+        public Task StartAsync(CancellationToken cancellationToken)
+        {
+            return _serviceBusProcessor.StartProcessingAsync(cancellationToken);
+        }
+
+        public Task StopAsync(CancellationToken cancellationToken)
+        {
+            return _serviceBusProcessor.StopProcessingAsync(cancellationToken);
         }
     }
 }

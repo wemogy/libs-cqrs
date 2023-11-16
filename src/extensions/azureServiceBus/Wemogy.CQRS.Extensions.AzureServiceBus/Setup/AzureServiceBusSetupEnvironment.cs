@@ -4,7 +4,6 @@ using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.DependencyInjection;
 using Wemogy.Core.Errors;
 using Wemogy.CQRS.Commands.Abstractions;
-using Wemogy.CQRS.Extensions.AzureServiceBus.Abstractions;
 using Wemogy.CQRS.Extensions.AzureServiceBus.Config;
 using Wemogy.CQRS.Extensions.AzureServiceBus.Processors;
 
@@ -15,14 +14,14 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Setup
         private readonly ServiceBusClient _serviceBusClient;
         private readonly IServiceCollection _serviceCollection;
         private readonly Dictionary<Type, DelayedProcessingOptions> _delayedProcessingOptions;
-        private readonly Dictionary<Type, IAzureServiceBusCommandProcessor> _serviceBusProcessors;
+        private readonly HashSet<Type> _commandTypesWithRegisteredProcessor;
 
         public AzureServiceBusSetupEnvironment(ServiceBusClient serviceBusClient, IServiceCollection serviceCollection)
         {
             _serviceBusClient = serviceBusClient;
             _serviceCollection = serviceCollection;
             _delayedProcessingOptions = new Dictionary<Type, DelayedProcessingOptions>();
-            _serviceBusProcessors = new Dictionary<Type, IAzureServiceBusCommandProcessor>();
+            _commandTypesWithRegisteredProcessor = new HashSet<Type>();
         }
 
         /// <summary>
@@ -34,13 +33,18 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Setup
         {
             var queueName = GetQueueName<TCommand>();
 
-            var serviceBusProcessor = _serviceBusClient.CreateProcessor(queueName, new ServiceBusProcessorOptions()
+            _serviceCollection.AddHostedService(_ =>
             {
-                MaxConcurrentCalls = maxConcurrentCalls
-            });
-            var processor = new AzureServiceBusCommandProcessor<TCommand>(serviceBusProcessor, _serviceCollection);
+                var serviceBusProcessor = _serviceBusClient.CreateProcessor(queueName, new ServiceBusProcessorOptions()
+                {
+                    MaxConcurrentCalls = maxConcurrentCalls
+                });
+                var processor = new AzureServiceBusCommandProcessor<TCommand>(serviceBusProcessor, _serviceCollection);
 
-            _serviceBusProcessors.Add(typeof(TCommand), processor);
+                return processor;
+            });
+
+            _commandTypesWithRegisteredProcessor.Add(typeof(TCommand));
 
             return this;
         }
@@ -52,7 +56,7 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Setup
             string queueName)
             where TCommand : ICommandBase
         {
-            if (_serviceBusProcessors.ContainsKey(typeof(TCommand)))
+            if (_commandTypesWithRegisteredProcessor.Contains(typeof(TCommand)))
             {
                 throw Error.Unexpected(
                     "WrongCallOrder",
