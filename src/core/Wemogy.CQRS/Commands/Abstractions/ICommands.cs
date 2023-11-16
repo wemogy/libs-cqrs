@@ -15,9 +15,10 @@ public interface ICommands
     /// Schedules a command to be executed after a specified delay in a background-job
     /// </summary>
     /// <returns>The ID of the scheduled job</returns>
-    Task<string> ScheduleAsync(ICommandBase command, TimeSpan delay);
+    Task<string> ScheduleAsync(ICommandBase command, TimeSpan delay = default);
 
-    Task DeleteScheduledAsync(string jobId);
+    Task DeleteScheduledAsync<TCommand>(string jobId)
+        where TCommand : ICommandBase;
 
     /// <summary>
     /// Create a recurring background-job which executes the command every time the specified interval has passed.

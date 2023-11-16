@@ -23,6 +23,8 @@ jobs:
         working-directory: src
         shell: bash
         run: dotnet test -c Release /p:CollectCoverage=true -m:1
+        env:
+          AzureServiceBusConnectionString: ${{ secrets.AZURE_SERVICE_BUS_CONNECTION_STRING }}
 
       - name: Code Coverage Summary Report
         uses: irongut/CodeCoverageSummary@v1.0.2

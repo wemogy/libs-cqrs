@@ -38,12 +38,13 @@ public class CommandsMediator : ICommands
         return _commandRunnerRegistry.ExecuteCommandRunnerAsync(command);
     }
 
-    public Task<string> ScheduleAsync(ICommandBase command, TimeSpan delay)
+    public Task<string> ScheduleAsync(ICommandBase command, TimeSpan delay = default)
     {
         return _scheduledCommandRunnerRegistry.ExecuteScheduledCommandRunnerAsync(command, delay);
     }
 
-    public Task DeleteScheduledAsync(string jobId)
+    public Task DeleteScheduledAsync<TCommand>(string jobId)
+        where TCommand : ICommandBase
     {
         if (_scheduledCommandService == null)
         {
@@ -52,7 +53,7 @@ public class CommandsMediator : ICommands
                 "DelayedJobService is not registered. Please register it in the DI container.");
         }
 
-        return _scheduledCommandService.DeleteAsync(jobId);
+        return _scheduledCommandService.DeleteAsync<TCommand>(jobId);
     }
 
     public Task ScheduleRecurringAsync(

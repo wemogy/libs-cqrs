@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Wemogy.CQRS.Setup;
 using Wemogy.CQRS.UnitTests.TestApplication.Common.Contexts;
@@ -12,6 +15,15 @@ public static class DependencyInjection
         {
             TenantId = TestContext.DefaultTenantId
         });
-        return services.AddCQRS();
+        return services.AddCQRS(
+            new List<Assembly>()
+            {
+                Assembly.GetCallingAssembly(),
+                Assembly.GetExecutingAssembly()
+            },
+            new Dictionary<Type, Type>()
+            {
+                { typeof(TestContext), typeof(TestContext) },
+            });
     }
 }

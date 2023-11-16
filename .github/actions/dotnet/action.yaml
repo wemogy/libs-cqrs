@@ -22,7 +22,3 @@ runs:
       working-directory: src
       shell: bash
       run: dotnet build --configuration ${{ inputs.configuration }} --no-restore
-    - name: Test
-      working-directory: src
-      shell: bash
-      run: dotnet test --configuration ${{ inputs.configuration }} --verbosity normal

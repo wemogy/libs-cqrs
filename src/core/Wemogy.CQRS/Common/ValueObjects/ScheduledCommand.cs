@@ -8,15 +8,20 @@ using Wemogy.CQRS.Commands.Abstractions;
 namespace Wemogy.CQRS.Common.ValueObjects;
 
 public class ScheduledCommand<TCommand> : IScheduledCommand
+    where TCommand : notnull
 {
     [JsonInclude]
     public List<ScheduledCommandDependency> Dependencies { get; private set; }
+
+    [JsonInclude]
+    public Type CommandType { get; private set; }
 
     public TCommand Command { get; set; }
 
     public ScheduledCommand(List<ScheduledCommandDependency> dependencies, TCommand command)
     {
         Dependencies = dependencies;
+        CommandType = command.GetType();
         Command = command;
     }
 
@@ -32,6 +37,6 @@ public class ScheduledCommand<TCommand> : IScheduledCommand
             return null;
         }
 
-        return json?.FromJson(dependency.ImplementationType);
+        return json.FromJson(dependency.ImplementationType);
     }
 }

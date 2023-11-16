@@ -6,7 +6,7 @@ using Wemogy.CQRS.Common.ValueObjects;
 
 namespace Wemogy.CQRS.Commands.Runners;
 
-public class ScheduledCommandRunner<TCommand, TResult>
+public class ScheduledCommandRunner<TCommand, TResult> : IScheduledCommandRunner<TCommand>
     where TCommand : ICommand<TResult>
 {
     private readonly IScheduledCommandDependencyResolver _scheduledCommandDependencyResolver;
@@ -48,7 +48,8 @@ public class ScheduledCommandRunner<TCommand, TResult>
             deps,
             command);
         var jobId = await _scheduledCommandService.ScheduleAsync(
-            () => RunAsync(helper),
+            this,
+            helper,
             delay);
 
         return jobId;

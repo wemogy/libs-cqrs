@@ -2,9 +2,9 @@ using System;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Hangfire;
-using Hangfire.Common;
 using Hangfire.States;
 using Wemogy.CQRS.Commands.Abstractions;
+using Wemogy.CQRS.Common.ValueObjects;
 
 namespace Wemogy.CQRS.Extensions.Hangfire.Services
 {
@@ -17,9 +17,14 @@ namespace Wemogy.CQRS.Extensions.Hangfire.Services
             _backgroundJobClient = backgroundJobClient;
         }
 
-        public Task<string> ScheduleAsync(Expression<Func<Task>> methodCall, TimeSpan delay)
+        public Task<string> ScheduleAsync<TCommand>(
+            IScheduledCommandRunner<TCommand> scheduledCommandRunner,
+            ScheduledCommand<TCommand> scheduledCommand,
+            TimeSpan delay)
+            where TCommand : notnull
         {
             string jobId;
+            Expression<Func<Task>> methodCall = () => scheduledCommandRunner.RunAsync(scheduledCommand);
 
             if (delay == TimeSpan.Zero)
             {
@@ -33,7 +38,8 @@ namespace Wemogy.CQRS.Extensions.Hangfire.Services
             return Task.FromResult(jobId);
         }
 
-        public Task DeleteAsync(string jobId)
+        public Task DeleteAsync<TCommand>(string jobId)
+            where TCommand : ICommandBase
         {
             _backgroundJobClient.ChangeState(jobId, new DeletedState());
             return Task.CompletedTask;
