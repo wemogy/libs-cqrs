@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Wemogy.CQRS.Commands.ValueObjects;
 
 namespace Wemogy.CQRS.Commands.Abstractions;
 
@@ -15,7 +16,14 @@ public interface ICommands
     /// Schedules a command to be executed after a specified delay in a background-job
     /// </summary>
     /// <returns>The ID of the scheduled job</returns>
-    Task<string> ScheduleAsync(ICommandBase command, TimeSpan delay = default);
+    Task<string> ScheduleAsync<TCommand>(TCommand command, TimeSpan delay = default)
+        where TCommand : ICommandBase;
+
+    Task<string> ScheduleAsync<TCommand>(TCommand command, DelayOptions<TCommand> delayOptions)
+        where TCommand : ICommandBase;
+
+    Task<string> ScheduleAsync<TCommand>(TCommand command, ThrottleOptions<TCommand> throttleOptions)
+        where TCommand : ICommandBase;
 
     Task DeleteScheduledAsync<TCommand>(string jobId)
         where TCommand : ICommandBase;

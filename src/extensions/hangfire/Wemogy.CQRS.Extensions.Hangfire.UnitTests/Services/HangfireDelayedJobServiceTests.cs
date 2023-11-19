@@ -5,6 +5,7 @@ using FluentAssertions;
 using Hangfire;
 using Microsoft.Extensions.DependencyInjection;
 using Wemogy.CQRS.Commands.Abstractions;
+using Wemogy.CQRS.Commands.ValueObjects;
 using Wemogy.CQRS.Common.ValueObjects;
 using Wemogy.CQRS.Extensions.Hangfire.UnitTests.Testing.Commands.PrintContext;
 using Wemogy.CQRS.UnitTests.TestApplication;
@@ -40,7 +41,8 @@ public class HangfireDelayedJobServiceTests
         var jobId = await scheduledCommandService.ScheduleAsync(
             scheduledCommandRunner,
             scheduledCommand,
-            TimeSpan.FromMinutes(1));
+            new ScheduleOptions<PrintContextCommand>(
+                new DelayOptions<PrintContextCommand>(TimeSpan.FromMinutes(1))));
         var jobDataAfterScheduling = storageConnection.GetJobData(jobId);
         await scheduledCommandService.DeleteAsync<PrintContextCommand>(jobId);
         var jobDataAfterDelete = storageConnection.GetJobData(jobId);

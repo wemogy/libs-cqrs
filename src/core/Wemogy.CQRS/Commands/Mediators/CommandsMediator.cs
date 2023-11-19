@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Wemogy.Core.Errors;
 using Wemogy.CQRS.Commands.Abstractions;
 using Wemogy.CQRS.Commands.Registries;
+using Wemogy.CQRS.Commands.ValueObjects;
 
 namespace Wemogy.CQRS.Commands.Mediators;
 
@@ -38,9 +39,26 @@ public class CommandsMediator : ICommands
         return _commandRunnerRegistry.ExecuteCommandRunnerAsync(command);
     }
 
-    public Task<string> ScheduleAsync(ICommandBase command, TimeSpan delay = default)
+    public Task<string> ScheduleAsync<TCommand>(TCommand command, TimeSpan delay = default)
+        where TCommand : ICommandBase
     {
-        return _scheduledCommandRunnerRegistry.ExecuteScheduledCommandRunnerAsync(command, delay);
+        return ScheduleAsync(command, new DelayOptions<TCommand>(delay));
+    }
+
+    public Task<string> ScheduleAsync<TCommand>(TCommand command, DelayOptions<TCommand> delayOptions)
+        where TCommand : ICommandBase
+    {
+        return _scheduledCommandRunnerRegistry.ExecuteScheduledCommandRunnerAsync(
+            command,
+            new ScheduleOptions<TCommand>(delayOptions));
+    }
+
+    public Task<string> ScheduleAsync<TCommand>(TCommand command, ThrottleOptions<TCommand> throttleOptions)
+        where TCommand : ICommandBase
+    {
+        return _scheduledCommandRunnerRegistry.ExecuteScheduledCommandRunnerAsync(
+            command,
+            new ScheduleOptions<TCommand>(throttleOptions));
     }
 
     public Task DeleteScheduledAsync<TCommand>(string jobId)

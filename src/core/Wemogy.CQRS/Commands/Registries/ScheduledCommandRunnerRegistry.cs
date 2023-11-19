@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Wemogy.Core.Extensions;
 using Wemogy.CQRS.Commands.Abstractions;
 using Wemogy.CQRS.Commands.Runners;
+using Wemogy.CQRS.Commands.ValueObjects;
 using Wemogy.CQRS.Common.Abstractions;
 using Wemogy.CQRS.Common.ValueObjects;
 
@@ -19,15 +20,16 @@ public class ScheduledCommandRunnerRegistry : RegistryBase<Type, TypeMethodRegis
         _serviceProvider = serviceProvider;
     }
 
-    public Task<string> ExecuteScheduledCommandRunnerAsync(
-        ICommandBase command,
-        TimeSpan delay)
+    public Task<string> ExecuteScheduledCommandRunnerAsync<TCommand>(
+        TCommand command,
+        ScheduleOptions<TCommand> scheduleOptions)
+        where TCommand : ICommandBase
     {
         var scheduledCommandRunnerEntry = GetScheduledCommandRunnerEntry(command);
         return ExecuteScheduledCommandRunnerAsync(
             scheduledCommandRunnerEntry,
             command,
-            delay);
+            scheduleOptions);
     }
 
     private TypeMethodRegistryEntry GetScheduledCommandRunnerEntry(ICommandBase command)
@@ -37,16 +39,17 @@ public class ScheduledCommandRunnerRegistry : RegistryBase<Type, TypeMethodRegis
         return scheduledCommandRunnerEntry;
     }
 
-    private Task<string> ExecuteScheduledCommandRunnerAsync(
+    private Task<string> ExecuteScheduledCommandRunnerAsync<TCommand>(
         TypeMethodRegistryEntry scheduledCommandRunnerEntry,
-        ICommandBase command,
-        TimeSpan delay)
+        TCommand command,
+        ScheduleOptions<TCommand> scheduleOptions)
+        where TCommand : ICommandBase
     {
         object scheduledCommandRunner = _serviceProvider.GetRequiredService(scheduledCommandRunnerEntry.Type);
         var parameters = new object[]
         {
             command,
-            delay
+            scheduleOptions
         };
         dynamic res = scheduledCommandRunnerEntry.Method.Invoke(scheduledCommandRunner, parameters);
         return res;
