@@ -50,10 +50,48 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Setup
         }
 
         /// <summary>
+        /// Creates a ServiceBusProcessor and subscribes to messages of type <typeparamref name="TCommand"/>
+        /// </summary>
+        public AzureServiceBusSetupEnvironment AddDelayedSessionProcessor<TCommand>(
+            int maxConcurrentSessions = 1)
+            where TCommand : ICommandBase
+        {
+            var queueName = GetQueueName<TCommand>();
+
+            if (!_delayedProcessingOptions.TryGetValue(typeof(TCommand), out var delayedProcessingOptions))
+            {
+                delayedProcessingOptions = new DelayedProcessingOptions();
+                _delayedProcessingOptions.Add(typeof(TCommand), delayedProcessingOptions);
+            }
+
+            delayedProcessingOptions.IsSessionSupported = true;
+
+            _serviceCollection.AddHostedService(_ =>
+            {
+                var serviceBusSessionProcessor = _serviceBusClient.CreateSessionProcessor(
+                    queueName,
+                    new ServiceBusSessionProcessorOptions()
+                    {
+                        MaxConcurrentSessions = maxConcurrentSessions
+                    });
+                var processor = new AzureServiceBusCommandSessionProcessor<TCommand>(
+                    serviceBusSessionProcessor,
+                    _serviceCollection);
+
+                return processor;
+            });
+
+            _commandTypesWithRegisteredProcessor.Add(typeof(TCommand));
+
+            return this;
+        }
+
+        /// <summary>
         /// Use this method to configure how the delayed command should be scheduled in Azure Service Bus
         /// </summary>
         public AzureServiceBusSetupEnvironment ConfigureDelayedProcessing<TCommand>(
-            string queueName)
+            string? queueName = null,
+            Func<TCommand, string>? sessionIdResolver = null)
             where TCommand : ICommandBase
         {
             if (_commandTypesWithRegisteredProcessor.Contains(typeof(TCommand)))
@@ -74,6 +112,17 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Setup
         {
             _delayedProcessingOptions.TryGetValue(typeof(TCommand), out var delayedProcessingOptions);
             return delayedProcessingOptions?.QueueName ?? typeof(TCommand).Name.ToLower();
+        }
+
+        public void EnsureSessionIsSupported<TCommand>()
+        {
+            if (!_delayedProcessingOptions.TryGetValue(typeof(TCommand), out var delayedProcessingOptions) ||
+                !delayedProcessingOptions.IsSessionSupported)
+            {
+                throw Error.PreconditionFailed(
+                    "SessionSupportIsNotEnabled",
+                    "You need to enable session support using AddDelayedSessionProcessor instead of AddDelayedProcessor");
+            }
         }
     }
 }

@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Azure.Messaging.ServiceBus;
+using Wemogy.Core.Errors;
 using Wemogy.Core.Extensions;
 using Wemogy.CQRS.Commands.Abstractions;
+using Wemogy.CQRS.Commands.ValueObjects;
 using Wemogy.CQRS.Common.ValueObjects;
 using Wemogy.CQRS.Extensions.AzureServiceBus.Setup;
 
@@ -38,14 +40,14 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Services
         public async Task<string> ScheduleAsync<TCommand>(
             IScheduledCommandRunner<TCommand> scheduledCommandRunner,
             ScheduledCommand<TCommand> scheduledCommand,
-            TimeSpan delay)
-            where TCommand : notnull
+            ScheduleOptions<TCommand> scheduleOptions)
+            where TCommand : ICommandBase
         {
             string jobId;
             var serviceBusSender = GetServiceBusSender<TCommand>();
-
-            // we use Newtonsoft.Json here, because it supports serializing of Type, which we use in ScheduledCommand
             var jsonBody = scheduledCommand.ToJson();
+            var delayOptions = scheduleOptions.DelayOptions;
+            var throttleOptions = scheduleOptions.ThrottleOptions;
 
             var message = new ServiceBusMessage()
             {
@@ -53,16 +55,46 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Services
                 Body = new BinaryData(jsonBody),
             };
 
-            if (delay == TimeSpan.Zero)
+            var sessionIdResolver = delayOptions?.SessionIdResolver ?? throttleOptions?.SessionIdResolver;
+
+            if (sessionIdResolver != null)
             {
-                await serviceBusSender.SendMessageAsync(message);
-                jobId = ImmediateMessageJobId;
+                _azureServiceBusSetupEnvironment.EnsureSessionIsSupported<TCommand>();
+                var sessionId = sessionIdResolver(scheduledCommand.Command);
+                message.SessionId = sessionId;
+            }
+
+            if (delayOptions != null)
+            {
+                if (delayOptions.Delay == TimeSpan.Zero)
+                {
+                    await serviceBusSender.SendMessageAsync(message);
+                    jobId = ImmediateMessageJobId;
+                }
+                else
+                {
+                    var dateTimeOffset = DateTimeOffset.UtcNow.Add(delayOptions.Delay);
+                    var sequenceNumber = await serviceBusSender.ScheduleMessageAsync(message, dateTimeOffset);
+                    jobId = sequenceNumber.ToString();
+                }
+            }
+            else if (throttleOptions != null)
+            {
+                var timestamp = DateTime.UtcNow;
+                var throttlingKey = throttleOptions.GetThrottlingKey(scheduledCommand.Command, timestamp);
+                var throttlePeriodEnd = throttleOptions.GetThrottlePeriodEnd(timestamp);
+
+                // set messageId to throttling key, to use deduplication feature to delete other messages in period
+                message.MessageId = throttlingKey;
+
+                var sequenceNumber = await serviceBusSender.ScheduleMessageAsync(message, throttlePeriodEnd);
+                jobId = sequenceNumber.ToString();
             }
             else
             {
-                var dateTimeOffset = DateTimeOffset.UtcNow.Add(delay);
-                var sequenceNumber = await serviceBusSender.ScheduleMessageAsync(message, dateTimeOffset);
-                jobId = sequenceNumber.ToString();
+                throw Error.Unexpected(
+                    "InvalidScheduleOptions",
+                    "Invalid schedule options. Please provide either delay options or throttle options.");
             }
 
             return jobId;

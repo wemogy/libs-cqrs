@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Hangfire;
 using Hangfire.States;
 using Wemogy.CQRS.Commands.Abstractions;
+using Wemogy.CQRS.Commands.ValueObjects;
 using Wemogy.CQRS.Common.ValueObjects;
 
 namespace Wemogy.CQRS.Extensions.Hangfire.Services
@@ -20,19 +21,27 @@ namespace Wemogy.CQRS.Extensions.Hangfire.Services
         public Task<string> ScheduleAsync<TCommand>(
             IScheduledCommandRunner<TCommand> scheduledCommandRunner,
             ScheduledCommand<TCommand> scheduledCommand,
-            TimeSpan delay)
-            where TCommand : notnull
+            ScheduleOptions<TCommand> scheduleOptions)
+            where TCommand : ICommandBase
         {
             string jobId;
             Expression<Func<Task>> methodCall = () => scheduledCommandRunner.RunAsync(scheduledCommand);
+            var delayOptions = scheduleOptions.DelayOptions;
 
-            if (delay == TimeSpan.Zero)
+            if (delayOptions != null)
             {
-                jobId = _backgroundJobClient.Enqueue(methodCall);
+                if (delayOptions.Delay == TimeSpan.Zero)
+                {
+                    jobId = _backgroundJobClient.Enqueue(methodCall);
+                }
+                else
+                {
+                    jobId = _backgroundJobClient.Create(methodCall, new ScheduledState(delayOptions.Delay));
+                }
             }
             else
             {
-                jobId = _backgroundJobClient.Create(methodCall, new ScheduledState(delay));
+                throw new NotImplementedException();
             }
 
             return Task.FromResult(jobId);

@@ -1,7 +1,7 @@
-using System;
 using System.Threading.Tasks;
 using Wemogy.Core.Errors;
 using Wemogy.CQRS.Commands.Abstractions;
+using Wemogy.CQRS.Commands.ValueObjects;
 using Wemogy.CQRS.Common.ValueObjects;
 
 namespace Wemogy.CQRS.Commands.Runners;
@@ -30,7 +30,7 @@ public class ScheduledCommandRunner<TCommand, TResult> : IScheduledCommandRunner
         _scheduledCommandService = scheduledCommandService;
     }
 
-    public async Task<string> ScheduleAsync(TCommand command, TimeSpan delay)
+    public async Task<string> ScheduleAsync(TCommand command, ScheduleOptions<TCommand> scheduleOptions)
     {
         if (_scheduledCommandService == null)
         {
@@ -42,7 +42,7 @@ public class ScheduledCommandRunner<TCommand, TResult> : IScheduledCommandRunner
         // pre-checking
         await _preProcessingRunner.RunPreChecksAsync(command);
 
-        // schedule scheduled command
+        // build the scheduled command
         var deps = _scheduledCommandDependencyResolver.ResolveDependencies();
         var helper = new ScheduledCommand<TCommand>(
             deps,
@@ -50,7 +50,7 @@ public class ScheduledCommandRunner<TCommand, TResult> : IScheduledCommandRunner
         var jobId = await _scheduledCommandService.ScheduleAsync(
             this,
             helper,
-            delay);
+            scheduleOptions);
 
         return jobId;
     }

@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Wemogy.Configuration;
 using Wemogy.CQRS.Commands.Abstractions;
+using Wemogy.CQRS.Commands.ValueObjects;
 using Wemogy.CQRS.Extensions.AzureServiceBus.Abstractions;
 using Wemogy.CQRS.Extensions.AzureServiceBus.UnitTests.Testing.Commands.PrintContext;
 using Wemogy.CQRS.Extensions.AzureServiceBus.UnitTests.Testing.Commands.PrintHelloWorld;
@@ -15,11 +16,11 @@ using Xunit;
 
 namespace Wemogy.CQRS.Extensions.AzureServiceBus.UnitTests.Services;
 
-public class AzureServiceBusScheduledCommandServiceTests
+public class AzureServiceBusScheduledCommandServiceDebounceTests
 {
     private readonly ICommands _commands;
     private readonly IServiceProvider _serviceProvider;
-    public AzureServiceBusScheduledCommandServiceTests()
+    public AzureServiceBusScheduledCommandServiceDebounceTests()
     {
         var configuration = ConfigurationFactory.BuildConfiguration("Development");
         var serviceCollection = new ServiceCollection();
@@ -32,7 +33,7 @@ public class AzureServiceBusScheduledCommandServiceTests
 
             // Configure QueueName, Message Session ID and etc.
             .ConfigureDelayedProcessing<PrintContextCommand>(
-                "unit-testing-queue-1")
+            "unit-testing-queue-duplicate-detection")
             .AddDelayedProcessor<PrintContextCommand>()
             .AddDelayedProcessor<PrintHelloWorld>();
 
@@ -41,34 +42,23 @@ public class AzureServiceBusScheduledCommandServiceTests
     }
 
     [Fact]
-    public async Task ScheduleAsync_ShouldWorkWhenPassingADelay()
+    public async Task ScheduleAsyncDebounced_ShouldWork()
     {
         // Arrange
         var command = new PrintContextCommand();
         await StartHostedServiceAsync();
 
         // Act
-        await _commands.ScheduleAsync(command, TimeSpan.FromSeconds(5));
+        for (int i = 0; i < 10; i++)
+        {
+            await _commands.ScheduleAsync(command, new ThrottleOptions<PrintContextCommand>(
+                x =>
+                    x.TenantId ?? "default",
+                TimeSpan.FromSeconds(5)));
+        }
 
         // Assert
-        await Task.Delay(TimeSpan.FromSeconds(1));
-        PrintContextCommandHandler.ExecutedCount.Should().NotContainKey(command.Id);
         await Task.Delay(TimeSpan.FromSeconds(5));
-        PrintContextCommandHandler.ExecutedCount[command.Id].Should().Be(1);
-    }
-
-    [Fact]
-    public async Task ScheduleAsync_ShouldWorkWithoutPassingDelay()
-    {
-        // Arrange
-        var command = new PrintContextCommand();
-        await StartHostedServiceAsync();
-
-        // Act
-        await _commands.ScheduleAsync(command);
-
-        // Assert
-        await Task.Delay(TimeSpan.FromSeconds(1));
         PrintContextCommandHandler.ExecutedCount[command.Id].Should().Be(1);
     }
 
