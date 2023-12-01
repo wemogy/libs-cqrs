@@ -54,6 +54,7 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Setup
         /// </summary>
         public AzureServiceBusSetupEnvironment AddDelayedSessionProcessor<TCommand>(
             int maxConcurrentSessions = 1,
+            int maxConcurrentCallsPerSession = 1,
             Action<ServiceBusSessionProcessorOptions>? configureSessionProcessorOptions = null)
             where TCommand : ICommandBase
         {
@@ -72,6 +73,7 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Setup
                 var serviceBusSessionProcessorOptions = new ServiceBusSessionProcessorOptions()
                 {
                     MaxConcurrentSessions = maxConcurrentSessions,
+                    MaxConcurrentCallsPerSession = maxConcurrentCallsPerSession,
                     SessionIdleTimeout = TimeSpan.FromSeconds(2)
                 };
 

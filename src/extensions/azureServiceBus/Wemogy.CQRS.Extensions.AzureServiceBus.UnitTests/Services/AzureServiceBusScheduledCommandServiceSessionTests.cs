@@ -73,11 +73,14 @@ public class AzureServiceBusScheduledCommandServiceSessionTests
         }
 
         // Start the hosted service and wait a while for it to process the messages
-        await StartHostedServiceAsync();
+        var hostedService = await StartHostedServiceAsync();
         while (GetProcessedCommandsHistory().Count < totalMessagesCount)
         {
             await Task.Delay(TimeSpan.FromSeconds(2));
         }
+
+        // Stop the hosted service
+        await hostedService.StopAsync(CancellationToken.None);
 
         // Assert
         GetProcessedCommandsHistory()
@@ -99,7 +102,7 @@ public class AzureServiceBusScheduledCommandServiceSessionTests
             .HaveCount(1);
     }
 
-    private async Task StartHostedServiceAsync()
+    private async Task<IHostedService> StartHostedServiceAsync()
     {
         var hostedService = _serviceProvider
             .GetServices<IHostedService>()
@@ -109,5 +112,7 @@ public class AzureServiceBusScheduledCommandServiceSessionTests
 
         // wait a bit for the hosted service to start and may process deprecated messages
         await Task.Delay(TimeSpan.FromSeconds(5));
+
+        return hostedService;
     }
 }
