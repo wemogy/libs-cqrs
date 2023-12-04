@@ -1,14 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
-    <IsPackable>true</IsPackable>
   </PropertyGroup>
 
   <PropertyGroup>
     <PackageId>Wemogy.CQRS.Extensions.Hangfire</PackageId>
     <Authors>wemogy GmbH</Authors>
     <Company>wemogy GmbH</Company>
-    <PackageDescription>Hangfire extensions for wemogy.CQRS</PackageDescription>
+    <PackageDescription>(deprecarted) Hangfire extensions for wemogy.CQRS</PackageDescription>
     <PackageTags>wemogy</PackageTags>
     <RepositoryUrl>https://github.com/wemogy/libs-cqrs</RepositoryUrl>
   </PropertyGroup>
