@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.DependencyInjection;
 using Wemogy.Core.Errors;
+using Wemogy.CQRS.Abstractions;
 using Wemogy.CQRS.Commands.Abstractions;
 using Wemogy.CQRS.Extensions.AzureServiceBus.Config;
 using Wemogy.CQRS.Extensions.AzureServiceBus.Processors;
@@ -33,7 +34,7 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Setup
         {
             var queueName = GetQueueName<TCommand>();
 
-            _serviceCollection.AddHostedService(_ =>
+            _serviceCollection.AddHostedService<IDelayedCommandProcessorHostedService<TCommand>>(_ =>
             {
                 var serviceBusProcessor = _serviceBusClient.CreateProcessor(queueName, new ServiceBusProcessorOptions()
                 {
@@ -68,7 +69,7 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Setup
 
             delayedProcessingOptions.IsSessionSupported = true;
 
-            _serviceCollection.AddHostedService(_ =>
+            _serviceCollection.AddHostedService<IDelayedCommandProcessorHostedService<TCommand>>(_ =>
             {
                 var serviceBusSessionProcessorOptions = new ServiceBusSessionProcessorOptions()
                 {

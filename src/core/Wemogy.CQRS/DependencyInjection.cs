@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Wemogy.Core.Extensions;
+using Wemogy.Core.Monitoring;
 using Wemogy.CQRS.Commands.Abstractions;
 using Wemogy.CQRS.Commands.Mediators;
 using Wemogy.CQRS.Commands.Registries;
@@ -11,6 +12,7 @@ using Wemogy.CQRS.Commands.Resolvers;
 using Wemogy.CQRS.Commands.Runners;
 using Wemogy.CQRS.Common.ValueObjects;
 using Wemogy.CQRS.Extensions;
+using Wemogy.CQRS.Health;
 using Wemogy.CQRS.Queries.Abstractions;
 using Wemogy.CQRS.Queries.Mediators;
 using Wemogy.CQRS.Queries.Registries;
@@ -315,5 +317,22 @@ public static class DependencyInjection
                     .ToListOfType(implementationCollectionType);
             return implementationInstances;
         });
+    }
+
+    /// <summary>
+    /// Adds the ActivitySource and Meter of the CQRS library to the monitoring environment
+    /// </summary>
+    public static MonitoringEnvironment WithCQRS(this MonitoringEnvironment monitoringEnvironment)
+    {
+        return monitoringEnvironment
+            .WithActivitySource(Observability.DefaultActivities.Name)
+            .WithMeter(Observability.Meter.Name);
+    }
+
+    public static IHealthChecksBuilder AddDelayedProcessorCheck<TCommand>(this IHealthChecksBuilder healthChecksBuilder)
+        where TCommand : ICommandBase
+    {
+        return healthChecksBuilder.AddCheck<DelayedCommandProcessorHealthCheck<TCommand>>(
+            $"{nameof(TCommand)}DelayedProcessorHealthCheck");
     }
 }
