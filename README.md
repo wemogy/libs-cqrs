@@ -77,6 +77,16 @@ public class Demo
 }
 ```
 
+### Delayed command processing
+
+Commands can be executed immediately or be delayed to be processed in the background. Delaying command works by registering a delayed command handling processor.
+
+This library implements the following delayed command processing providers
+
+- Azure Service Bus
+- Hangfire (deprecated)
+
+
 ## Queries
 
 Define your first Query, by creating a class for it, wich implements the `IQuery<TReturnType>` interface. The Query itself does not contain any execution logic and only collects the information needed for the exectution. The Query execution is done at the Command Handler.
