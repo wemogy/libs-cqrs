@@ -53,7 +53,9 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Setup
         /// Creates a ServiceBusProcessor and subscribes to messages of type <typeparamref name="TCommand"/>
         /// </summary>
         public AzureServiceBusSetupEnvironment AddDelayedSessionProcessor<TCommand>(
-            int maxConcurrentSessions = 1)
+            int maxConcurrentSessions = 1,
+            int maxConcurrentCallsPerSession = 1,
+            Action<ServiceBusSessionProcessorOptions>? configureSessionProcessorOptions = null)
             where TCommand : ICommandBase
         {
             var queueName = GetQueueName<TCommand>();
@@ -68,12 +70,18 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Setup
 
             _serviceCollection.AddHostedService(_ =>
             {
+                var serviceBusSessionProcessorOptions = new ServiceBusSessionProcessorOptions()
+                {
+                    MaxConcurrentSessions = maxConcurrentSessions,
+                    MaxConcurrentCallsPerSession = maxConcurrentCallsPerSession,
+                    SessionIdleTimeout = TimeSpan.FromSeconds(2)
+                };
+
+                configureSessionProcessorOptions?.Invoke(serviceBusSessionProcessorOptions);
+
                 var serviceBusSessionProcessor = _serviceBusClient.CreateSessionProcessor(
                     queueName,
-                    new ServiceBusSessionProcessorOptions()
-                    {
-                        MaxConcurrentSessions = maxConcurrentSessions
-                    });
+                    serviceBusSessionProcessorOptions);
                 var processor = new AzureServiceBusCommandSessionProcessor<TCommand>(
                     serviceBusSessionProcessor,
                     _serviceCollection);
