@@ -84,7 +84,7 @@ Commands can be executed immediately or be delayed to be processed in the backgr
 This library implements the following delayed command processing providers
 
 - Azure Service Bus
-- Hangfire (deprecated)
+- Hangfire ([deprecated](https://github.com/wemogy/libs-cqrs/tree/cd68317355449ac9386aa2b9685f0c6bab61149a))
 
 
 ## Queries
