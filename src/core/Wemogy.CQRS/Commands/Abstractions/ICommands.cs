@@ -19,6 +19,9 @@ public interface ICommands
     Task<string> ScheduleAsync<TCommand>(TCommand command, TimeSpan delay = default)
         where TCommand : ICommandBase;
 
+    Task<string> ScheduleAsync<TCommand>(TCommand command, Func<TCommand, string> sessionIdResolver)
+        where TCommand : ICommandBase;
+
     Task<string> ScheduleAsync<TCommand>(TCommand command, DelayOptions<TCommand> delayOptions)
         where TCommand : ICommandBase;
 

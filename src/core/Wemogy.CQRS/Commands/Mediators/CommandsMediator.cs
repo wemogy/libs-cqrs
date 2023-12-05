@@ -45,6 +45,12 @@ public class CommandsMediator : ICommands
         return ScheduleAsync(command, new DelayOptions<TCommand>(delay));
     }
 
+    public Task<string> ScheduleAsync<TCommand>(TCommand command, Func<TCommand, string> sessionIdResolver)
+        where TCommand : ICommandBase
+    {
+        return ScheduleAsync(command, new DelayOptions<TCommand>(TimeSpan.Zero, sessionIdResolver));
+    }
+
     public Task<string> ScheduleAsync<TCommand>(TCommand command, DelayOptions<TCommand> delayOptions)
         where TCommand : ICommandBase
     {
