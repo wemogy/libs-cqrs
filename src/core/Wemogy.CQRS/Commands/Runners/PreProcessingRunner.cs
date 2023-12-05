@@ -37,6 +37,7 @@ public class PreProcessingRunner<TCommand>
     {
         foreach (var commandValidator in _commandValidators)
         {
+            using var activity = Observability.DefaultActivities.StartActivity($"{typeof(TCommand).Name} Validation");
             await commandValidator.ValidateAsync(command);
         }
     }
@@ -45,6 +46,7 @@ public class PreProcessingRunner<TCommand>
     {
         foreach (var commandAuthorization in _commandAuthorizations)
         {
+            using var activity = Observability.DefaultActivities.StartActivity($"{typeof(TCommand).Name} Authorization");
             await commandAuthorization.AuthorizeAsync(command);
         }
     }
@@ -53,6 +55,7 @@ public class PreProcessingRunner<TCommand>
     {
         foreach (var commandPreProcessor in _commandPreProcessors)
         {
+            using var activity = Observability.DefaultActivities.StartActivity($"{typeof(TCommand).Name} PreProcessor");
             await commandPreProcessor.ProcessAsync(command);
         }
     }

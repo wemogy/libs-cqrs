@@ -18,6 +18,7 @@ public class PostProcessingRunner<TCommand, TResult>
     {
         foreach (var postProcessor in _postProcessors)
         {
+            using var activity = Observability.DefaultActivities.StartActivity($"{typeof(TCommand).Name} PostProcessor");
             await postProcessor.ProcessAsync(command, result);
         }
     }

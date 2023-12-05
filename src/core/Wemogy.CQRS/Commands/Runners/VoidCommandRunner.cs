@@ -22,11 +22,15 @@ public class VoidCommandRunner<TCommand>
 
     public async Task RunAsync(TCommand command)
     {
+        using var activity = Observability.DefaultActivities.StartActivity($"{typeof(TCommand).Name} Run");
+
         // pre-processing
         await _preProcessingRunner.RunAsync(command);
 
         // processing
+        using var commandHandlerActivity = Observability.DefaultActivities.StartActivity($"{typeof(TCommand).Name} CommandHandler");
         await _commandHandler.HandleAsync(command);
+        commandHandlerActivity?.Stop();
 
         // post-processing
         await _postProcessingRunner.RunAsync(command);

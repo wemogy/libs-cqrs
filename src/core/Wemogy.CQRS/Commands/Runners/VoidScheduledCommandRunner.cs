@@ -39,6 +39,8 @@ public class VoidScheduledCommandRunner<TCommand> : IScheduledCommandRunner<TCom
                 "ScheduledJobService is not registered. Please register it in the DI container.");
         }
 
+        using var activity = Observability.DefaultActivities.StartActivity($"{typeof(TCommand).Name} Schedule");
+
         // pre-checking
         await _preProcessingRunner.RunPreChecksAsync(command);
 
@@ -48,6 +50,7 @@ public class VoidScheduledCommandRunner<TCommand> : IScheduledCommandRunner<TCom
             deps,
             command);
 
+        using var scheduledCommandServiceActivity = Observability.DefaultActivities.StartActivity($"{typeof(TCommand).Name} Scheduling");
         string jobId = await _scheduledCommandService.ScheduleAsync(
             this,
             helper,
@@ -58,13 +61,16 @@ public class VoidScheduledCommandRunner<TCommand> : IScheduledCommandRunner<TCom
 
     public async Task RunAsync(ScheduledCommand<TCommand> scheduledCommand)
     {
+        using var activity = Observability.DefaultActivities.StartActivity($"{typeof(TCommand).Name} Run");
         var command = scheduledCommand.Command;
 
         // pre-processing
         await _preProcessingRunner.RunPreProcessorsAsync(command);
 
         // processing
+        using var commandHandlerActivity = Observability.DefaultActivities.StartActivity($"{typeof(TCommand).Name} CommandHandler");
         await _commandHandler.HandleAsync(command);
+        commandHandlerActivity?.Stop();
 
         // post-processing
         await _postProcessingRunner.RunAsync(command);
