@@ -6,22 +6,19 @@ using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Wemogy.Configuration;
-using Wemogy.CQRS.Commands.Abstractions;
-using Wemogy.CQRS.Commands.ValueObjects;
 using Wemogy.CQRS.Extensions.AzureServiceBus.Abstractions;
 using Wemogy.CQRS.Extensions.AzureServiceBus.UnitTests.Testing.Commands.PrintContext;
-using Wemogy.CQRS.Extensions.AzureServiceBus.UnitTests.Testing.Commands.PrintHelloWorld;
 using Wemogy.CQRS.UnitTests.TestApplication;
 using Xunit;
 
-namespace Wemogy.CQRS.Extensions.AzureServiceBus.UnitTests.Services;
+namespace Wemogy.CQRS.Extensions.AzureServiceBus.UnitTests.Processors;
 
 [Collection("AzureServiceBus")]
-public class AzureServiceBusScheduledCommandServiceDebounceTests
+public class AzureServiceBusCommandProcessorTests
 {
-    private readonly ICommands _commands;
     private readonly IServiceProvider _serviceProvider;
-    public AzureServiceBusScheduledCommandServiceDebounceTests()
+
+    public AzureServiceBusCommandProcessorTests()
     {
         var configuration = ConfigurationFactory.BuildConfiguration("Development");
         var serviceCollection = new ServiceCollection();
@@ -34,36 +31,56 @@ public class AzureServiceBusScheduledCommandServiceDebounceTests
 
             // Configure QueueName, Message Session ID and etc.
             .ConfigureDelayedProcessing<PrintContextCommand>(
-            "unit-testing-queue-duplicate-detection")
-            .AddDelayedProcessor<PrintContextCommand>()
-            .AddDelayedProcessor<PrintHelloWorld>();
+                "unit-testing-queue-1")
+            .AddDelayedProcessor<PrintContextCommand>();
 
         _serviceProvider = serviceCollection.BuildServiceProvider();
-        _commands = _serviceProvider.GetRequiredService<ICommands>();
     }
 
     [Fact]
-    public async Task ScheduleAsyncDebounced_ShouldWork()
+    public async Task IsAlive_ShouldBeTrueIfAzureServiceBusCommandProcessorIsObservingQueue()
     {
         // Arrange
-        var command = new PrintContextCommand();
-        await StartHostedServiceAsync();
+        var hostedService = await StartHostedServiceAsync();
 
         // Act
-        for (int i = 0; i < 10; i++)
-        {
-            await _commands.ScheduleAsync(command, new ThrottleOptions<PrintContextCommand>(
-                x =>
-                    x.TenantId ?? "default",
-                TimeSpan.FromSeconds(15)));
-        }
+        var isAlive = hostedService.IsAlive;
 
         // Assert
-        await Task.Delay(TimeSpan.FromSeconds(15));
-        PrintContextCommandHandler.ExecutedCount[command.Id].Should().Be(1);
+        isAlive.Should().BeTrue();
     }
 
-    private async Task StartHostedServiceAsync()
+    [Fact]
+    public async Task IsAlive_ShouldBeFalseIfAzureServiceBusCommandProcessorWasStopped()
+    {
+        // Arrange
+        var hostedService = await StartHostedServiceAsync();
+        await hostedService.StopAsync(CancellationToken.None);
+
+        // Act
+        var isAlive = hostedService.IsAlive;
+
+        // Assert
+        isAlive.Should().BeFalse();
+    }
+
+    [Fact]
+    public void IsAlive_ShouldBeFalseIfAzureServiceBusCommandProcessorWasNotStarted()
+    {
+        // Arrange
+        var hostedService = _serviceProvider
+            .GetServices<IHostedService>()
+            .OfType<IAzureServiceBusCommandProcessorHostedService<PrintContextCommand>>()
+            .First();
+
+        // Act
+        var isAlive = hostedService.IsAlive;
+
+        // Assert
+        isAlive.Should().BeFalse();
+    }
+
+    private async Task<IAzureServiceBusCommandProcessorHostedService<PrintContextCommand>> StartHostedServiceAsync()
     {
         var hostedService = _serviceProvider
             .GetServices<IHostedService>()
@@ -73,5 +90,7 @@ public class AzureServiceBusScheduledCommandServiceDebounceTests
 
         // wait a bit for the hosted service to start and may process deprecated messages
         await Task.Delay(TimeSpan.FromSeconds(5));
+
+        return hostedService;
     }
 }

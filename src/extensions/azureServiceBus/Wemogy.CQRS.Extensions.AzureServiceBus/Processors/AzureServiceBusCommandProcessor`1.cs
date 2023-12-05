@@ -19,6 +19,12 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
         private readonly ServiceBusProcessor _serviceBusProcessor;
         private readonly IServiceCollection _serviceCollection;
         private readonly ScheduledCommandDependencies _scheduledCommandDependencies;
+        private bool _isStarted;
+
+        /// <summary>
+        /// The hosted service is alive, if it is started and the service bus processor is not closed
+        /// </summary>
+        public bool IsAlive => _isStarted && !_serviceBusProcessor.IsClosed;
 
         public AzureServiceBusCommandProcessor(
             ServiceBusProcessor serviceBusProcessor,
@@ -71,11 +77,10 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
                     });
             }
 
-            var scopeFactory = services.BuildServiceProvider().GetRequiredService<IServiceScopeFactory>();
-            var scope = scopeFactory.CreateScope();
-
             try
             {
+                using var scope = services.BuildServiceProvider().CreateScope();
+
                 var scheduledCommandRunner = scope.ServiceProvider.GetRequiredService<IScheduledCommandRunner<TCommand>>();
 
                 await scheduledCommandRunner.RunAsync(scheduledCommand);
@@ -88,14 +93,20 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
             }
         }
 
-        public Task StartAsync(CancellationToken cancellationToken)
+        public async Task StartAsync(CancellationToken cancellationToken)
         {
-            return _serviceBusProcessor.StartProcessingAsync(cancellationToken);
+            using var activity =
+                Observability.DefaultActivities.StartActivity($"Starting {nameof(AzureServiceBusCommandSessionProcessor<TCommand>)}");
+            await _serviceBusProcessor.StartProcessingAsync(cancellationToken);
+            _isStarted = true;
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
+        public async Task StopAsync(CancellationToken cancellationToken)
         {
-            return _serviceBusProcessor.StopProcessingAsync(cancellationToken);
+            using var activity =
+                Observability.DefaultActivities.StartActivity($"Stopping {nameof(AzureServiceBusCommandSessionProcessor<TCommand>)}");
+            await _serviceBusProcessor.StopProcessingAsync(cancellationToken);
+            _isStarted = false;
         }
     }
 }

@@ -16,6 +16,7 @@ using Xunit;
 
 namespace Wemogy.CQRS.Extensions.AzureServiceBus.UnitTests.Services;
 
+[Collection("AzureServiceBus")]
 public class AzureServiceBusScheduledCommandServiceSessionTests
 {
     private readonly ICommands _commands;
