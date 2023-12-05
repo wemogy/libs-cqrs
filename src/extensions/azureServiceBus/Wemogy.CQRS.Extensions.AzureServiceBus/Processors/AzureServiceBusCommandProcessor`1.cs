@@ -77,11 +77,10 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
                     });
             }
 
-            var scopeFactory = services.BuildServiceProvider().GetRequiredService<IServiceScopeFactory>();
-            var scope = scopeFactory.CreateScope();
-
             try
             {
+                using var scope = services.BuildServiceProvider().CreateScope();
+
                 var scheduledCommandRunner = scope.ServiceProvider.GetRequiredService<IScheduledCommandRunner<TCommand>>();
 
                 await scheduledCommandRunner.RunAsync(scheduledCommand);
