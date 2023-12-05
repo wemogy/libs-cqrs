@@ -9,7 +9,7 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.UnitTests.Testing.Commands.Prin
 
 public class PrintContextCommandHandler : ICommandHandler<PrintContextCommand>
 {
-    public static Dictionary<string, int> ExecutedCount { get; } = new Dictionary<string, int>();
+    public static Dictionary<string, int> ExecutedCount { get; } = new ();
 
     private readonly TestContext _myTestingContext;
 

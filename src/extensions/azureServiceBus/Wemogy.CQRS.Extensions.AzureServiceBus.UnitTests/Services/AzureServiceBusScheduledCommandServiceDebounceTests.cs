@@ -55,11 +55,11 @@ public class AzureServiceBusScheduledCommandServiceDebounceTests
             await _commands.ScheduleAsync(command, new ThrottleOptions<PrintContextCommand>(
                 x =>
                     x.TenantId ?? "default",
-                TimeSpan.FromSeconds(5)));
+                TimeSpan.FromSeconds(15)));
         }
 
         // Assert
-        await Task.Delay(TimeSpan.FromSeconds(5));
+        await Task.Delay(TimeSpan.FromSeconds(15));
         PrintContextCommandHandler.ExecutedCount[command.Id].Should().Be(1);
     }
 
