@@ -33,8 +33,10 @@ public class AzureServiceBusScheduledCommandServiceDebounceTests
             .AddAzureServiceBus(configuration["AzureServiceBusConnectionString"] !)
 
             // Configure QueueName, Message Session ID and etc.
-            .ConfigureDelayedProcessing<PrintContextCommand>(
-            "unit-testing-queue-duplicate-detection")
+            .ConfigureDelayedProcessing<PrintContextCommand>(builder =>
+            {
+                builder.WithQueueName("unit-testing-queue-duplicate-detection");
+            })
             .AddDelayedProcessor<PrintContextCommand>()
             .AddDelayedProcessor<PrintHelloWorld>();
 
@@ -55,11 +57,11 @@ public class AzureServiceBusScheduledCommandServiceDebounceTests
             await _commands.ScheduleAsync(command, new ThrottleOptions<PrintContextCommand>(
                 x =>
                     x.TenantId ?? "default",
-                TimeSpan.FromSeconds(15)));
+                TimeSpan.FromSeconds(20)));
         }
 
         // Assert
-        await Task.Delay(TimeSpan.FromSeconds(15));
+        await Task.Delay(TimeSpan.FromSeconds(25));
         PrintContextCommandHandler.ExecutedCount[command.Id].Should().Be(1);
     }
 

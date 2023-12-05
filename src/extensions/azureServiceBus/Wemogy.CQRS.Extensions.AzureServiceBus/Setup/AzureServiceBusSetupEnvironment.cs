@@ -61,13 +61,12 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Setup
         {
             var queueName = GetQueueName<TCommand>();
 
-            if (!_delayedProcessingOptions.TryGetValue(typeof(TCommand), out var delayedProcessingOptions))
+            if (!_delayedProcessingOptions.TryGetValue(typeof(TCommand), out var delayedProcessingOptions) || !delayedProcessingOptions.IsSessionSupported)
             {
-                delayedProcessingOptions = new DelayedProcessingOptions();
-                _delayedProcessingOptions.Add(typeof(TCommand), delayedProcessingOptions);
+                throw Error.PreconditionFailed(
+                    "SessionSupportIsNotEnabled",
+                    "You need to enable session support using ConfigureDelayedProcessing before using AddDelayedSessionProcessor");
             }
-
-            delayedProcessingOptions.IsSessionSupported = true;
 
             _serviceCollection.AddHostedService<IDelayedCommandProcessorHostedService<TCommand>>(_ =>
             {
@@ -98,9 +97,7 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Setup
         /// <summary>
         /// Use this method to configure how the delayed command should be scheduled in Azure Service Bus
         /// </summary>
-        public AzureServiceBusSetupEnvironment ConfigureDelayedProcessing<TCommand>(
-            string? queueName = null,
-            Func<TCommand, string>? sessionIdResolver = null)
+        public AzureServiceBusSetupEnvironment ConfigureDelayedProcessing<TCommand>(Action<DelayedProcessingOptionsBuilder> configure)
             where TCommand : ICommandBase
         {
             if (_commandTypesWithRegisteredProcessor.Contains(typeof(TCommand)))
@@ -110,10 +107,11 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Setup
                     "You must configure the delayed processing options before adding the delayed processor");
             }
 
-            _delayedProcessingOptions.Add(typeof(TCommand), new DelayedProcessingOptions()
-            {
-                QueueName = queueName
-            });
+            var builder = new DelayedProcessingOptionsBuilder();
+            configure(builder);
+            var delayedProcessingOptions = builder.Build();
+
+            _delayedProcessingOptions.Add(typeof(TCommand), delayedProcessingOptions);
             return this;
         }
 

@@ -33,8 +33,12 @@ public class AzureServiceBusScheduledCommandServiceSessionTests
             .AddAzureServiceBus(configuration["AzureServiceBusConnectionString"] !)
 
             // Configure QueueName, Message Session ID and etc.
-            .ConfigureDelayedProcessing<PrintSessionIdCommand>(
-                "unit-testing-queue-sessions")
+            .ConfigureDelayedProcessing<PrintSessionIdCommand>(builder =>
+            {
+                builder
+                    .WithQueueName("unit-testing-queue-sessions")
+                    .WithSessionSupport();
+            })
             .AddDelayedSessionProcessor<PrintSessionIdCommand>();
 
         _serviceProvider = serviceCollection.BuildServiceProvider();
