@@ -101,7 +101,7 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
                     async () =>
                     {
                         while (!renewSessionLockCancellationToken.IsCancellationRequested &&
-                               !scheduledCommandRunnerTask.IsCompleted)
+                                !scheduledCommandRunnerTask.IsCompleted)
                         {
                             await Task.Delay(_renewSessionLockInterval, renewSessionLockCancellationToken);
                             Console.WriteLine($"Renewing session lock for session{arg.SessionId}...");
