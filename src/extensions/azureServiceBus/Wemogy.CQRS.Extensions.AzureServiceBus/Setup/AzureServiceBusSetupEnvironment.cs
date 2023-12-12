@@ -53,10 +53,15 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Setup
         /// <summary>
         /// Creates a ServiceBusProcessor and subscribes to messages of type <typeparamref name="TCommand"/>
         /// </summary>
+        /// <param name="maxConcurrentSessions">The maximum number of concurrent sessions (default 1)</param>
+        /// <param name="maxConcurrentCallsPerSession">The maximum number of concurrent calls per session (default 1)</param>
+        /// <param name="configureSessionProcessorOptions">Optional custom configuration of the ServiceBusSessionProcessorOptions</param>
+        /// <param name="renewSessionLockInterval">The interval to renew the session lock (default 1 minute)</param>
         public AzureServiceBusSetupEnvironment AddDelayedSessionProcessor<TCommand>(
             int maxConcurrentSessions = 1,
             int maxConcurrentCallsPerSession = 1,
-            Action<ServiceBusSessionProcessorOptions>? configureSessionProcessorOptions = null)
+            Action<ServiceBusSessionProcessorOptions>? configureSessionProcessorOptions = null,
+            TimeSpan? renewSessionLockInterval = null)
             where TCommand : ICommandBase
         {
             var queueName = GetQueueName<TCommand>();
@@ -84,7 +89,8 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Setup
                     serviceBusSessionProcessorOptions);
                 var processor = new AzureServiceBusCommandSessionProcessor<TCommand>(
                     serviceBusSessionProcessor,
-                    _serviceCollection);
+                    _serviceCollection,
+                    renewSessionLockInterval ?? TimeSpan.FromMinutes(1));
 
                 return processor;
             });
