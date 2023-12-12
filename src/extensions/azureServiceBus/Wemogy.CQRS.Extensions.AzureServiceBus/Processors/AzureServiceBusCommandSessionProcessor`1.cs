@@ -27,12 +27,10 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
         public bool IsAlive => _isStarted && !_serviceBusSessionProcessor.IsClosed;
 
         private readonly string _handleMessageActivityName;
-        private readonly TimeSpan _renewSessionLockInterval;
 
         public AzureServiceBusCommandSessionProcessor(
             ServiceBusSessionProcessor serviceBusSessionProcessor,
-            IServiceCollection serviceCollection,
-            TimeSpan renewSessionLockInterval)
+            IServiceCollection serviceCollection)
         {
             _serviceBusSessionProcessor = serviceBusSessionProcessor;
             _serviceCollection = serviceCollection;
@@ -46,7 +44,6 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
                 .BuildServiceProvider()
                 .GetRequiredService<ScheduledCommandDependencies>();
             _handleMessageActivityName = $"HandleMessageOf{typeof(TCommand).Name}";
-            _renewSessionLockInterval = renewSessionLockInterval;
         }
 
         public async Task HandleMessageAsync(ProcessSessionMessageEventArgs arg)
@@ -87,52 +84,17 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
             var scopeFactory = services.BuildServiceProvider().GetRequiredService<IServiceScopeFactory>();
             var scope = scopeFactory.CreateScope();
 
-            var renewSessionLockCancellationTokenSource = new CancellationTokenSource();
-            var renewSessionLockCancellationToken = renewSessionLockCancellationTokenSource.Token;
-            Task? renewSessionLockTask = null;
             try
             {
                 var scheduledCommandRunner =
                     scope.ServiceProvider.GetRequiredService<IScheduledCommandRunner<TCommand>>();
-                var scheduledCommandRunnerTask = scheduledCommandRunner.RunAsync(scheduledCommand);
-
-                // renew session lock every 30 seconds
-                renewSessionLockTask = Task.Run(
-                    async () =>
-                    {
-                        while (!renewSessionLockCancellationToken.IsCancellationRequested &&
-                                !scheduledCommandRunnerTask.IsCompleted)
-                        {
-                            await Task.Delay(_renewSessionLockInterval, renewSessionLockCancellationToken);
-                            Console.WriteLine($"Renewing session lock for session{arg.SessionId}...");
-                            try
-                            {
-                                await arg.RenewSessionLockAsync(renewSessionLockCancellationToken);
-                                Console.WriteLine($"Renewed session lock for session {arg.SessionId}");
-                            }
-                            catch (Exception e)
-                            {
-                                Console.WriteLine($"Failed to renew session lock for session {arg.SessionId}");
-                                Console.WriteLine(e);
-                                throw;
-                            }
-                        }
-                    },
-                    renewSessionLockCancellationTokenSource.Token);
-
-                await scheduledCommandRunnerTask;
-                renewSessionLockCancellationTokenSource.Cancel();
+                await scheduledCommandRunner.RunAsync(scheduledCommand);
             }
             catch (Exception e)
             {
                 // ToDo: Dead letter message ==> Maybe remove try/catch let AutoComplete manage this
                 Console.WriteLine(e);
                 throw;
-            }
-            finally
-            {
-                renewSessionLockCancellationTokenSource.Dispose();
-                renewSessionLockTask?.Dispose();
             }
         }
 
