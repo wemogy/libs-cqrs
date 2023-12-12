@@ -105,8 +105,17 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
                         {
                             await Task.Delay(_renewSessionLockInterval, renewSessionLockCancellationToken);
                             Console.WriteLine($"Renewing session lock for session{arg.SessionId}...");
-                            await arg.RenewSessionLockAsync(arg.CancellationToken);
-                            Console.WriteLine($"Renewed session lock for session {arg.SessionId}");
+                            try
+                            {
+                                await arg.RenewSessionLockAsync(renewSessionLockCancellationToken);
+                                Console.WriteLine($"Renewed session lock for session {arg.SessionId}");
+                            }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine($"Failed to renew session lock for session {arg.SessionId}");
+                                Console.WriteLine(e);
+                                throw;
+                            }
                         }
                     },
                     renewSessionLockCancellationTokenSource.Token);
