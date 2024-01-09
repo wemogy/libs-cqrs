@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using Azure.Messaging.ServiceBus;
 using Wemogy.Core.Errors;
@@ -16,23 +16,21 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Services
         private const string ImmediateMessageJobId = "IMMEDIATE_MESSAGE";
         private readonly ServiceBusClient _serviceBusClient;
         private readonly AzureServiceBusSetupEnvironment _azureServiceBusSetupEnvironment;
-        private readonly Dictionary<string, ServiceBusSender> _serviceBusSenders;
+        private readonly ConcurrentDictionary<string, ServiceBusSender> _serviceBusSenders;
 
         public AzureServiceBusScheduledCommandService(ServiceBusClient serviceBusClient, AzureServiceBusSetupEnvironment azureServiceBusSetupEnvironment)
         {
             _serviceBusClient = serviceBusClient;
             _azureServiceBusSetupEnvironment = azureServiceBusSetupEnvironment;
-            _serviceBusSenders = new Dictionary<string, ServiceBusSender>();
+            _serviceBusSenders = new ConcurrentDictionary<string, ServiceBusSender>();
         }
 
         private ServiceBusSender GetServiceBusSender<TCommand>()
         {
             var queueOrTopicName = _azureServiceBusSetupEnvironment.GetQueueName<TCommand>();
-            if (!_serviceBusSenders.TryGetValue(queueOrTopicName, out var serviceBusSender))
-            {
-                serviceBusSender = _serviceBusClient.CreateSender(queueOrTopicName);
-                _serviceBusSenders.TryAdd(queueOrTopicName, serviceBusSender);
-            }
+            var serviceBusSender = _serviceBusSenders.GetOrAdd(
+                queueOrTopicName,
+                _ => _serviceBusClient.CreateSender(queueOrTopicName));
 
             return serviceBusSender;
         }
