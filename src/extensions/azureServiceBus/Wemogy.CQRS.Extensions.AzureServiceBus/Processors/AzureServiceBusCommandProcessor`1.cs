@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using OpenTelemetry.Trace;
 using Wemogy.Core.Errors;
 using Wemogy.Core.Json;
 using Wemogy.CQRS.Commands.Abstractions;
@@ -19,6 +20,7 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
         private readonly ServiceBusProcessor _serviceBusProcessor;
         private readonly IServiceCollection _serviceCollection;
         private readonly ScheduledCommandDependencies _scheduledCommandDependencies;
+        private readonly string _handleMessageActivityName;
         private bool _isStarted;
 
         /// <summary>
@@ -41,10 +43,12 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
             _scheduledCommandDependencies = serviceCollection
                 .BuildServiceProvider()
                 .GetRequiredService<ScheduledCommandDependencies>();
+            _handleMessageActivityName = $"HandleMessageOf{typeof(TCommand).Name}";
         }
 
         public async Task HandleMessageAsync(ProcessMessageEventArgs arg)
         {
+            using var activity = Observability.DefaultActivities.StartActivity(_handleMessageActivityName);
             var services = new ServiceCollection();
             foreach (var serviceDescriptor in _serviceCollection)
             {
@@ -87,8 +91,7 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
             }
             catch (Exception e)
             {
-                // ToDo: Dead letter message ==> Maybe remove try/catch let AutoComplete manage this
-                Console.WriteLine(e);
+                activity?.RecordException(e);
                 throw;
             }
         }
