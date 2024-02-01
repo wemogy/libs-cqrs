@@ -115,9 +115,9 @@ public static class DependencyInjection
         serviceCollection.AddScoped<ICommands, CommandsMediator>();
 
         // Add Registries
-        serviceCollection.AddScoped<CommandRunnerRegistry>();
-        serviceCollection.AddScoped<ScheduledCommandRunnerRegistry>();
-        serviceCollection.AddScoped<RecurringCommandRunnerRegistry>();
+        serviceCollection.AddSingleton<CommandRunnerRegistry>();
+        serviceCollection.AddSingleton<ScheduledCommandRunnerRegistry>();
+        serviceCollection.AddSingleton<RecurringCommandRunnerRegistry>();
     }
 
     private static void AddQueries(this IServiceCollection serviceCollection, List<Assembly> assemblies)
@@ -161,7 +161,7 @@ public static class DependencyInjection
         serviceCollection.AddScoped<IQueries, QueriesMediator>();
 
         // Add QueryRunnerRegistry
-        serviceCollection.AddScoped<QueryRunnerRegistry>();
+        serviceCollection.AddSingleton<QueryRunnerRegistry>();
     }
 
     private static void AddImplementation(

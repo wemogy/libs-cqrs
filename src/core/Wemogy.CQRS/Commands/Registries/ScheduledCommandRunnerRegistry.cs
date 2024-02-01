@@ -13,14 +13,8 @@ namespace Wemogy.CQRS.Commands.Registries;
 
 public class ScheduledCommandRunnerRegistry : RegistryBase<Type, TypeMethodRegistryEntry>
 {
-    private readonly IServiceProvider _serviceProvider;
-
-    public ScheduledCommandRunnerRegistry(IServiceProvider serviceProvider)
-    {
-        _serviceProvider = serviceProvider;
-    }
-
     public Task<string> ExecuteScheduledCommandRunnerAsync<TCommand>(
+        IServiceProvider serviceProvider,
         TCommand command,
         ScheduleOptions<TCommand> scheduleOptions)
         where TCommand : ICommandBase
@@ -28,6 +22,7 @@ public class ScheduledCommandRunnerRegistry : RegistryBase<Type, TypeMethodRegis
         var scheduledCommandRunnerEntry = GetScheduledCommandRunnerEntry(command);
         return ExecuteScheduledCommandRunnerAsync(
             scheduledCommandRunnerEntry,
+            serviceProvider,
             command,
             scheduleOptions);
     }
@@ -41,11 +36,12 @@ public class ScheduledCommandRunnerRegistry : RegistryBase<Type, TypeMethodRegis
 
     private Task<string> ExecuteScheduledCommandRunnerAsync<TCommand>(
         TypeMethodRegistryEntry scheduledCommandRunnerEntry,
+        IServiceProvider serviceProvider,
         TCommand command,
         ScheduleOptions<TCommand> scheduleOptions)
         where TCommand : ICommandBase
     {
-        object scheduledCommandRunner = _serviceProvider.GetRequiredService(scheduledCommandRunnerEntry.Type);
+        object scheduledCommandRunner = serviceProvider.GetRequiredService(scheduledCommandRunnerEntry.Type);
         var parameters = new object[]
         {
             command,

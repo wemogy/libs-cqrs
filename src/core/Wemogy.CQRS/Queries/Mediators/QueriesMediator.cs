@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Wemogy.CQRS.Queries.Abstractions;
@@ -8,14 +9,16 @@ namespace Wemogy.CQRS.Queries.Mediators;
 public class QueriesMediator : IQueries
 {
     private readonly QueryRunnerRegistry _queryRunnerRegistry;
+    private readonly IServiceProvider _serviceProvider;
 
-    public QueriesMediator(QueryRunnerRegistry queryRunnerRegistry)
+    public QueriesMediator(QueryRunnerRegistry queryRunnerRegistry, IServiceProvider serviceProvider)
     {
         _queryRunnerRegistry = queryRunnerRegistry;
+        _serviceProvider = serviceProvider;
     }
 
     public Task<TResult> QueryAsync<TResult>(IQuery<TResult> query, CancellationToken cancellationToken = default)
     {
-        return _queryRunnerRegistry.ExecuteQueryRunnerAsync(query, cancellationToken);
+        return _queryRunnerRegistry.ExecuteQueryRunnerAsync(_serviceProvider, query, cancellationToken);
     }
 }

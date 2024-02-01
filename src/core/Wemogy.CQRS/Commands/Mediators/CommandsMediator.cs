@@ -14,29 +14,32 @@ public class CommandsMediator : ICommands
     private readonly RecurringCommandRunnerRegistry _recurringCommandRunnerRegistry;
     private readonly IScheduledCommandService? _scheduledCommandService;
     private readonly IRecurringCommandService? _recurringCommandService;
+    private readonly IServiceProvider _serviceProvider;
 
     public CommandsMediator(
         CommandRunnerRegistry commandRunnerRegistry,
         ScheduledCommandRunnerRegistry scheduledCommandRunnerRegistry,
         RecurringCommandRunnerRegistry recurringCommandRunnerRegistry,
+        IServiceProvider serviceProvider,
         IScheduledCommandService? scheduledCommandService = null,
         IRecurringCommandService? recurringCommandService = null)
     {
         _commandRunnerRegistry = commandRunnerRegistry;
         _scheduledCommandRunnerRegistry = scheduledCommandRunnerRegistry;
         _recurringCommandRunnerRegistry = recurringCommandRunnerRegistry;
+        _serviceProvider = serviceProvider;
         _scheduledCommandService = scheduledCommandService;
         _recurringCommandService = recurringCommandService;
     }
 
     public Task<TResult> RunAsync<TResult>(ICommand<TResult> command)
     {
-        return _commandRunnerRegistry.ExecuteCommandRunnerAsync(command);
+        return _commandRunnerRegistry.ExecuteCommandRunnerAsync(_serviceProvider, command);
     }
 
     public Task RunAsync(ICommand command)
     {
-        return _commandRunnerRegistry.ExecuteCommandRunnerAsync(command);
+        return _commandRunnerRegistry.ExecuteCommandRunnerAsync(_serviceProvider, command);
     }
 
     public Task<string> ScheduleAsync<TCommand>(TCommand command, TimeSpan delay = default)
@@ -55,6 +58,7 @@ public class CommandsMediator : ICommands
         where TCommand : ICommandBase
     {
         return _scheduledCommandRunnerRegistry.ExecuteScheduledCommandRunnerAsync(
+            _serviceProvider,
             command,
             new ScheduleOptions<TCommand>(delayOptions));
     }
@@ -63,6 +67,7 @@ public class CommandsMediator : ICommands
         where TCommand : ICommandBase
     {
         return _scheduledCommandRunnerRegistry.ExecuteScheduledCommandRunnerAsync(
+            _serviceProvider,
             command,
             new ScheduleOptions<TCommand>(throttleOptions));
     }
@@ -86,6 +91,7 @@ public class CommandsMediator : ICommands
         string cronExpression)
     {
         return _recurringCommandRunnerRegistry.ExecuteRecurringCommandRunnerAsync(
+            _serviceProvider,
             name,
             command,
             cronExpression);
