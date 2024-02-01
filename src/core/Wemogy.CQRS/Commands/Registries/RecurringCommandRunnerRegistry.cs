@@ -12,14 +12,8 @@ namespace Wemogy.CQRS.Commands.Registries;
 
 public class RecurringCommandRunnerRegistry : RegistryBase<Type, TypeMethodRegistryEntry>
 {
-    private readonly IServiceProvider _serviceProvider;
-
-    public RecurringCommandRunnerRegistry(IServiceProvider serviceProvider)
-    {
-        _serviceProvider = serviceProvider;
-    }
-
     public Task ExecuteRecurringCommandRunnerAsync(
+        IServiceProvider serviceProvider,
         string recurringCommandId,
         ICommandBase command,
         string cronExpression)
@@ -27,6 +21,7 @@ public class RecurringCommandRunnerRegistry : RegistryBase<Type, TypeMethodRegis
         var recurringCommandRunnerEntry = GetRecurringCommandRunnerEntry(command);
         return ExecuteRecurringCommandRunnerAsync(
             recurringCommandRunnerEntry,
+            serviceProvider,
             recurringCommandId,
             command,
             cronExpression);
@@ -41,11 +36,12 @@ public class RecurringCommandRunnerRegistry : RegistryBase<Type, TypeMethodRegis
 
     private Task ExecuteRecurringCommandRunnerAsync(
         TypeMethodRegistryEntry recurringCommandRunnerEntry,
+        IServiceProvider serviceProvider,
         string recurringCommandId,
         ICommandBase command,
         string cronExpression)
     {
-        object recurringCommandRunner = _serviceProvider.GetRequiredService(recurringCommandRunnerEntry.Type);
+        object recurringCommandRunner = serviceProvider.GetRequiredService(recurringCommandRunnerEntry.Type);
         var parameters = new object[]
         {
             recurringCommandId,

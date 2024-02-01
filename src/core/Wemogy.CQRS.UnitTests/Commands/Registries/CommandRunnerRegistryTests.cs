@@ -16,7 +16,7 @@ public class CommandRunnerRegistryTests
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddTestApplication();
         var serviceProvider = serviceCollection.BuildServiceProvider();
-        var commandRunnerRegistry = new CommandRunnerRegistry(serviceProvider);
+        var commandRunnerRegistry = new CommandRunnerRegistry();
         var createUserCommand = new CreateUserCommand
         {
             Firstname = "John"
@@ -31,7 +31,7 @@ public class CommandRunnerRegistryTests
             },
             _ =>
             {
-                commandRunnerRegistry.ExecuteCommandRunnerAsync(createUserCommand);
+                commandRunnerRegistry.ExecuteCommandRunnerAsync(serviceProvider, createUserCommand);
             });
     }
 }

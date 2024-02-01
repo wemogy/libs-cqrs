@@ -13,17 +13,13 @@ namespace Wemogy.CQRS.Queries.Registries;
 
 public class QueryRunnerRegistry : RegistryBase<Type, TypeMethodRegistryEntry>
 {
-    private readonly IServiceProvider _serviceProvider;
-
-    public QueryRunnerRegistry(IServiceProvider serviceProvider)
-    {
-        _serviceProvider = serviceProvider;
-    }
-
-    public Task<TResult> ExecuteQueryRunnerAsync<TResult>(IQuery<TResult> query, CancellationToken cancellationToken)
+    public Task<TResult> ExecuteQueryRunnerAsync<TResult>(
+        IServiceProvider serviceProvider,
+        IQuery<TResult> query,
+        CancellationToken cancellationToken)
     {
         var queryRunnerEntry = GetQueryRunnerEntry(query);
-        return ExecuteQueryRunnerAsync(queryRunnerEntry, query, cancellationToken);
+        return ExecuteQueryRunnerAsync(queryRunnerEntry, serviceProvider, query, cancellationToken);
     }
 
     private TypeMethodRegistryEntry GetQueryRunnerEntry<TResult>(IQuery<TResult> query)
@@ -35,10 +31,11 @@ public class QueryRunnerRegistry : RegistryBase<Type, TypeMethodRegistryEntry>
 
     private Task<TResult> ExecuteQueryRunnerAsync<TResult>(
         TypeMethodRegistryEntry queryRunnerEntry,
+        IServiceProvider serviceProvider,
         IQuery<TResult> query,
         CancellationToken cancellationToken)
     {
-        var queryRunner = _serviceProvider.GetRequiredService(queryRunnerEntry.Type);
+        var queryRunner = serviceProvider.GetRequiredService(queryRunnerEntry.Type);
         dynamic res = queryRunnerEntry.Method.Invoke(queryRunner, new object[] { query, cancellationToken });
         return res;
     }
