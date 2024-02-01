@@ -12,17 +12,10 @@ namespace Wemogy.CQRS.Commands.Registries;
 
 public class CommandRunnerRegistry : RegistryBase<Type, TypeMethodRegistryEntry>
 {
-    private readonly IServiceProvider _serviceProvider;
-
-    public CommandRunnerRegistry(IServiceProvider serviceProvider)
-    {
-        _serviceProvider = serviceProvider;
-    }
-
-    public Task ExecuteCommandRunnerAsync(ICommand command)
+    public Task ExecuteCommandRunnerAsync(IServiceProvider serviceProvider, ICommand command)
     {
         var commandRunnerEntry = GetCommandRunnerEntry(command);
-        return ExecuteCommandRunnerAsync(commandRunnerEntry, command);
+        return ExecuteCommandRunnerAsync(serviceProvider, commandRunnerEntry, command);
     }
 
     private TypeMethodRegistryEntry GetCommandRunnerEntry(ICommand command)
@@ -32,17 +25,17 @@ public class CommandRunnerRegistry : RegistryBase<Type, TypeMethodRegistryEntry>
         return commandRunnerEntry;
     }
 
-    private Task ExecuteCommandRunnerAsync(TypeMethodRegistryEntry commandRunnerEntry, ICommand command)
+    private Task ExecuteCommandRunnerAsync(IServiceProvider serviceProvider, TypeMethodRegistryEntry commandRunnerEntry, ICommand command)
     {
-        object commandRunner = _serviceProvider.GetRequiredService(commandRunnerEntry.Type);
+        object commandRunner = serviceProvider.GetRequiredService(commandRunnerEntry.Type);
         dynamic res = commandRunnerEntry.Method.Invoke(commandRunner, new object[] { command });
         return res;
     }
 
-    public Task<TResult> ExecuteCommandRunnerAsync<TResult>(ICommand<TResult> command)
+    public Task<TResult> ExecuteCommandRunnerAsync<TResult>(IServiceProvider serviceProvider, ICommand<TResult> command)
     {
         var commandRunnerEntry = GetCommandRunnerEntry(command);
-        return ExecuteCommandRunnerAsync(commandRunnerEntry, command);
+        return ExecuteCommandRunnerAsync(serviceProvider, commandRunnerEntry, command);
     }
 
     private TypeMethodRegistryEntry GetCommandRunnerEntry<TResult>(ICommand<TResult> command)
@@ -52,9 +45,12 @@ public class CommandRunnerRegistry : RegistryBase<Type, TypeMethodRegistryEntry>
         return commandRunnerEntry;
     }
 
-    private Task<TResult> ExecuteCommandRunnerAsync<TResult>(TypeMethodRegistryEntry commandRunnerEntry, ICommand<TResult> command)
+    private Task<TResult> ExecuteCommandRunnerAsync<TResult>(
+        IServiceProvider serviceProvider,
+        TypeMethodRegistryEntry commandRunnerEntry,
+        ICommand<TResult> command)
     {
-        object commandRunner = _serviceProvider.GetRequiredService(commandRunnerEntry.Type);
+        object commandRunner = serviceProvider.GetRequiredService(commandRunnerEntry.Type);
         dynamic res = commandRunnerEntry.Method.Invoke(commandRunner, new object[] { command });
         return res;
     }

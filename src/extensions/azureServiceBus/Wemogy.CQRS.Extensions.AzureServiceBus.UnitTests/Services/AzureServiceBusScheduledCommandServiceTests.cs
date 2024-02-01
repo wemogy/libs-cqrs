@@ -75,6 +75,23 @@ public class AzureServiceBusScheduledCommandServiceTests
         PrintContextCommandHandler.ExecutedCount[command.Id].Should().Be(1);
     }
 
+    [Fact]
+    public async Task ScheduleAsync_ShouldWorkWhenCommandRunnerWasUsedBefore()
+    {
+        // Arrange
+        var command = new PrintContextCommand();
+        await StartHostedServiceAsync();
+        await _commands.RunAsync(command);
+        PrintContextCommandHandler.ExecutedCount.Clear();
+
+        // Act
+        await _commands.ScheduleAsync(command);
+
+        // Assert
+        await Task.Delay(TimeSpan.FromSeconds(1));
+        PrintContextCommandHandler.ExecutedCount[command.Id].Should().Be(1);
+    }
+
     private async Task StartHostedServiceAsync()
     {
         var hostedService = _serviceProvider

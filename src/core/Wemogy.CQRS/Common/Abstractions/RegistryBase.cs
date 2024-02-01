@@ -4,11 +4,11 @@ namespace Wemogy.CQRS.Common.Abstractions;
 
 public abstract class RegistryBase<TKey, TValue>
 {
-    private static readonly ConcurrentDictionary<TKey, TValue> EntriesCache = new ConcurrentDictionary<TKey, TValue>();
+    private readonly ConcurrentDictionary<TKey, TValue> _entriesCache = new ConcurrentDictionary<TKey, TValue>();
 
     protected TValue GetRegistryEntry(TKey key)
     {
-        return EntriesCache.GetOrAdd(key, InitializeEntry);
+        return _entriesCache.GetOrAdd(key, InitializeEntry);
     }
 
     protected abstract TValue InitializeEntry(TKey key);
