@@ -1,8 +1,8 @@
-exports.id = 487;
-exports.ids = [487];
+exports.id = 113;
+exports.ids = [113];
 exports.modules = {
 
-/***/ 17295:
+/***/ 62954:
 /***/ ((module) => {
 
 (function(f){if(true){module.exports=f()}else { var g; }})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c=undefined;if(!f&&c)return require(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u=undefined,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
@@ -6453,31 +6453,31 @@ module.exports = Worker;
 
 /***/ }),
 
-/***/ 19487:
+/***/ 47113:
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   diagram: () => (/* binding */ diagram)
 /* harmony export */ });
-/* harmony import */ var _mermaid_ae477ddf_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(87115);
-/* harmony import */ var d3__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(94646);
-/* harmony import */ var dagre_d3_es_src_dagre_js_label_add_html_label_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(43349);
-/* harmony import */ var elkjs_lib_elk_bundled_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(17295);
+/* harmony import */ var _mermaid_ae477ddf_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(90261);
+/* harmony import */ var d3__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(25305);
+/* harmony import */ var dagre_d3_es_src_dagre_js_label_add_html_label_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(10646);
+/* harmony import */ var elkjs_lib_elk_bundled_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(62954);
 /* harmony import */ var elkjs_lib_elk_bundled_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(elkjs_lib_elk_bundled_js__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var dayjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(27484);
+/* harmony import */ var dayjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(74353);
 /* harmony import */ var dayjs__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(dayjs__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var _braintree_sanitize_url__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(17967);
-/* harmony import */ var dompurify__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(20683);
-/* harmony import */ var dagre_d3_es_src_dagre_index_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(70277);
-/* harmony import */ var dagre_d3_es_src_graphlib_index_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(45625);
-/* harmony import */ var dagre_d3_es_src_graphlib_json_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(39354);
-/* harmony import */ var dagre_d3_es__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(91518);
-/* harmony import */ var dayjs_plugin_isoWeek_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(59542);
+/* harmony import */ var _braintree_sanitize_url__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(16750);
+/* harmony import */ var dompurify__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(77046);
+/* harmony import */ var dagre_d3_es_src_dagre_index_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(80071);
+/* harmony import */ var dagre_d3_es_src_graphlib_index_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(697);
+/* harmony import */ var dagre_d3_es_src_graphlib_json_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(83765);
+/* harmony import */ var dagre_d3_es__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(43709);
+/* harmony import */ var dayjs_plugin_isoWeek_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(68313);
 /* harmony import */ var dayjs_plugin_isoWeek_js__WEBPACK_IMPORTED_MODULE_9___default = /*#__PURE__*/__webpack_require__.n(dayjs_plugin_isoWeek_js__WEBPACK_IMPORTED_MODULE_9__);
-/* harmony import */ var dayjs_plugin_customParseFormat_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(10285);
+/* harmony import */ var dayjs_plugin_customParseFormat_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(90445);
 /* harmony import */ var dayjs_plugin_customParseFormat_js__WEBPACK_IMPORTED_MODULE_10___default = /*#__PURE__*/__webpack_require__.n(dayjs_plugin_customParseFormat_js__WEBPACK_IMPORTED_MODULE_10__);
-/* harmony import */ var dayjs_plugin_advancedFormat_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(28734);
+/* harmony import */ var dayjs_plugin_advancedFormat_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(97375);
 /* harmony import */ var dayjs_plugin_advancedFormat_js__WEBPACK_IMPORTED_MODULE_11___default = /*#__PURE__*/__webpack_require__.n(dayjs_plugin_advancedFormat_js__WEBPACK_IMPORTED_MODULE_11__);
 
 
@@ -6547,7 +6547,7 @@ const addVertices = function(vert, svgId, root, doc, diagObj, parentLookupDb, gr
           (s) => `<i class='${s.replace(":", " ")}'></i>`
         )
       };
-      vertexNode = (0,dagre_d3_es_src_dagre_js_label_add_html_label_js__WEBPACK_IMPORTED_MODULE_13__/* .addHtmlLabel */ .a)(svg, node2).node();
+      vertexNode = (0,dagre_d3_es_src_dagre_js_label_add_html_label_js__WEBPACK_IMPORTED_MODULE_13__/* .addHtmlLabel */ .H)(svg, node2).node();
       const bbox = vertexNode.getBBox();
       labelData.width = bbox.width;
       labelData.height = bbox.height;
@@ -6911,11 +6911,11 @@ const addEdges = function(edges, diagObj, graph, svg) {
     edgeData.style = edgeData.style += style;
     edgeData.labelStyle = edgeData.labelStyle += labelStyle;
     if (edge.interpolate !== void 0) {
-      edgeData.curve = (0,_mermaid_ae477ddf_js__WEBPACK_IMPORTED_MODULE_12__.d)(edge.interpolate, d3__WEBPACK_IMPORTED_MODULE_0__/* .curveLinear */ .c_6);
+      edgeData.curve = (0,_mermaid_ae477ddf_js__WEBPACK_IMPORTED_MODULE_12__.d)(edge.interpolate, d3__WEBPACK_IMPORTED_MODULE_0__/* .curveLinear */ .lUB);
     } else if (edges.defaultInterpolate !== void 0) {
-      edgeData.curve = (0,_mermaid_ae477ddf_js__WEBPACK_IMPORTED_MODULE_12__.d)(edges.defaultInterpolate, d3__WEBPACK_IMPORTED_MODULE_0__/* .curveLinear */ .c_6);
+      edgeData.curve = (0,_mermaid_ae477ddf_js__WEBPACK_IMPORTED_MODULE_12__.d)(edges.defaultInterpolate, d3__WEBPACK_IMPORTED_MODULE_0__/* .curveLinear */ .lUB);
     } else {
-      edgeData.curve = (0,_mermaid_ae477ddf_js__WEBPACK_IMPORTED_MODULE_12__.d)(conf.curve, d3__WEBPACK_IMPORTED_MODULE_0__/* .curveLinear */ .c_6);
+      edgeData.curve = (0,_mermaid_ae477ddf_js__WEBPACK_IMPORTED_MODULE_12__.d)(conf.curve, d3__WEBPACK_IMPORTED_MODULE_0__/* .curveLinear */ .lUB);
     }
     if (edge.text === void 0) {
       if (edge.style !== void 0) {
@@ -7075,10 +7075,10 @@ const insertEdge = function(edgesEl, edge, edgeData, diagObj, parentLookupDb) {
     ...segPoints,
     [dest.x + offset.x, dest.y + offset.y]
   ];
-  const curve = (0,d3__WEBPACK_IMPORTED_MODULE_0__/* .line */ .jvg)().curve(d3__WEBPACK_IMPORTED_MODULE_0__/* .curveLinear */ .c_6);
+  const curve = (0,d3__WEBPACK_IMPORTED_MODULE_0__/* .line */ .n8j)().curve(d3__WEBPACK_IMPORTED_MODULE_0__/* .curveLinear */ .lUB);
   const edgePath = edgesEl.insert("path").attr("d", curve(points)).attr("class", "path").attr("fill", "none");
   const edgeG = edgesEl.insert("g").attr("class", "edgeLabel");
-  const edgeWithLabel = (0,d3__WEBPACK_IMPORTED_MODULE_0__/* .select */ .Ys)(edgeG.node().appendChild(edge.labelEl));
+  const edgeWithLabel = (0,d3__WEBPACK_IMPORTED_MODULE_0__/* .select */ .Ltv)(edgeG.node().appendChild(edge.labelEl));
   const box = edgeWithLabel.node().firstChild.getBoundingClientRect();
   edgeWithLabel.attr("width", box.width);
   edgeWithLabel.attr("height", box.height);
@@ -7108,7 +7108,7 @@ const draw = async function(text, id, _version, diagObj) {
   nodeDb = {};
   diagObj.db.setGen("gen-2");
   diagObj.parser.parse(text);
-  const renderEl = (0,d3__WEBPACK_IMPORTED_MODULE_0__/* .select */ .Ys)("body").append("div").attr("style", "height:400px").attr("id", "cy");
+  const renderEl = (0,d3__WEBPACK_IMPORTED_MODULE_0__/* .select */ .Ltv)("body").append("div").attr("style", "height:400px").attr("id", "cy");
   let graph = {
     id: "root",
     layoutOptions: {
@@ -7142,9 +7142,9 @@ const draw = async function(text, id, _version, diagObj) {
   const { securityLevel, flowchart: conf2 } = (0,_mermaid_ae477ddf_js__WEBPACK_IMPORTED_MODULE_12__.g)();
   let sandboxElement;
   if (securityLevel === "sandbox") {
-    sandboxElement = (0,d3__WEBPACK_IMPORTED_MODULE_0__/* .select */ .Ys)("#i" + id);
+    sandboxElement = (0,d3__WEBPACK_IMPORTED_MODULE_0__/* .select */ .Ltv)("#i" + id);
   }
-  const root = securityLevel === "sandbox" ? (0,d3__WEBPACK_IMPORTED_MODULE_0__/* .select */ .Ys)(sandboxElement.nodes()[0].contentDocument.body) : (0,d3__WEBPACK_IMPORTED_MODULE_0__/* .select */ .Ys)("body");
+  const root = securityLevel === "sandbox" ? (0,d3__WEBPACK_IMPORTED_MODULE_0__/* .select */ .Ltv)(sandboxElement.nodes()[0].contentDocument.body) : (0,d3__WEBPACK_IMPORTED_MODULE_0__/* .select */ .Ltv)("body");
   const doc = securityLevel === "sandbox" ? sandboxElement.nodes()[0].contentDocument : document;
   const svg = root.select(`[id="${id}"]`);
   const markers = ["point", "circle", "cross"];
