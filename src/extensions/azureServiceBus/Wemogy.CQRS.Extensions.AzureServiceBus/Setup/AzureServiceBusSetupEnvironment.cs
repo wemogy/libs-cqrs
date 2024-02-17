@@ -30,17 +30,22 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Setup
         /// Creates a ServiceBusProcessor and subscribes to messages of type <typeparamref name="TCommand"/>
         /// </summary>
         public AzureServiceBusSetupEnvironment AddDelayedProcessor<TCommand>(
-            int maxConcurrentCalls = 1)
+            int maxConcurrentCalls = 1,
+            Action<ServiceBusProcessorOptions>? configureServiceBusProcessorOptions = null)
             where TCommand : ICommandBase
         {
             var queueName = GetQueueName<TCommand>();
 
             _serviceCollection.AddHostedService<IDelayedCommandProcessorHostedService<TCommand>>(_ =>
             {
-                var serviceBusProcessor = _serviceBusClient.CreateProcessor(queueName, new ServiceBusProcessorOptions()
+                var serviceBusProcessorOptions = new ServiceBusProcessorOptions()
                 {
                     MaxConcurrentCalls = maxConcurrentCalls
-                });
+                };
+
+                configureServiceBusProcessorOptions?.Invoke(serviceBusProcessorOptions);
+
+                var serviceBusProcessor = _serviceBusClient.CreateProcessor(queueName, serviceBusProcessorOptions);
                 var processor = new AzureServiceBusCommandProcessor<TCommand>(serviceBusProcessor, _serviceCollection);
 
                 return processor;
