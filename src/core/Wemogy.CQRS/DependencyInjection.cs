@@ -333,6 +333,6 @@ public static class DependencyInjection
         where TCommand : ICommandBase
     {
         return healthChecksBuilder.AddCheck<DelayedCommandProcessorHealthCheck<TCommand>>(
-            $"{nameof(TCommand)}DelayedProcessorHealthCheck");
+            $"{typeof(TCommand).Name}DelayedProcessorHealthCheck");
     }
 }
