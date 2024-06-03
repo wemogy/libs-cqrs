@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Wemogy.CQRS.Setup;
+using Wemogy.CQRS.UnitTests.AssemblyA.Commands;
 using Wemogy.CQRS.UnitTests.TestApplication.Common.Contexts;
 
 namespace Wemogy.CQRS.UnitTests.TestApplication;
@@ -19,7 +20,8 @@ public static class DependencyInjection
             new List<Assembly>()
             {
                 Assembly.GetCallingAssembly(),
-                Assembly.GetExecutingAssembly()
+                Assembly.GetExecutingAssembly(),
+                typeof(TrackUserActivityCommand).Assembly
             },
             new Dictionary<Type, Type>()
             {
