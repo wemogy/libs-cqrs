@@ -47,6 +47,9 @@ public static class DependencyInjection
         List<Assembly> assemblies,
         Dictionary<Type, Type>? dependencies = null)
     {
+        // remove duplicates from assemblies, which can happen, if Assembly.GetCallingAssembly() and Assembly.GetExecutingAssembly() are both added
+        assemblies = assemblies.Distinct().ToList();
+
         dependencies ??= new Dictionary<Type, Type>();
         serviceCollection.AddCommands(assemblies, dependencies);
         serviceCollection.AddQueries(assemblies);
@@ -60,7 +63,6 @@ public static class DependencyInjection
 
         foreach (var commandType in commandTypes)
         {
-            var assembly = commandType.Assembly;
             if (!commandType.InheritsOrImplements(typeof(ICommand<>), out Type? genericCommandType) || genericCommandType == null)
             {
                 if (!commandType.InheritsOrImplements(typeof(ICommand), out genericCommandType) || genericCommandType == null)
@@ -72,13 +74,13 @@ public static class DependencyInjection
             var resultType = genericCommandType.GenericTypeArguments.ElementAtOrDefault(0);
 
             // pre-processing
-            serviceCollection.AddPreProcessing(assembly, commandType);
+            serviceCollection.AddPreProcessing(assemblies, commandType);
 
             if (resultType == null)
             {
                 // command handler
                 serviceCollection.AddScopedGenericTypeWithImplementationFromAssembly(
-                    assembly,
+                    assemblies,
                     typeof(ICommandHandler<>),
                     commandType);
 
@@ -86,13 +88,13 @@ public static class DependencyInjection
                 serviceCollection.AddCommandRunners(commandType);
 
                 // post-processing
-                serviceCollection.AddPostProcessing(assembly, commandType);
+                serviceCollection.AddPostProcessing(assemblies, commandType);
             }
             else
             {
                 // command handler
                 serviceCollection.AddScopedGenericTypeWithImplementationFromAssembly(
-                    assembly,
+                    assemblies,
                     typeof(ICommandHandler<,>),
                     commandType,
                     resultType);
@@ -101,14 +103,15 @@ public static class DependencyInjection
                 serviceCollection.AddCommandRunners(commandType, resultType);
 
                 // post-processing
-                serviceCollection.AddPostProcessing(assembly, commandType, resultType);
+                serviceCollection.AddPostProcessing(assemblies, commandType, resultType);
             }
         }
 
         // ScheduledCommandDependencyResolver
         serviceCollection.AddSingleton(
             new ScheduledCommandDependencies(dependencies));
-        serviceCollection.AddScoped<IScheduledCommandDependencyResolver>(provider =>
+        serviceCollection.AddScoped<IScheduledCommandDependencyResolver>(
+            provider =>
             new ScheduledCommandDependencyResolver(provider, dependencies));
 
         // Add ICommands mediator
@@ -126,7 +129,6 @@ public static class DependencyInjection
 
         foreach (var queryType in queryTypes)
         {
-            var assembly = queryType.Assembly;
             if (!queryType.InheritsOrImplements(typeof(IQuery<>), out Type? genericQueryType) || genericQueryType == null)
             {
                 throw new Exception("Query type must inherit from IQuery<>");
@@ -135,14 +137,14 @@ public static class DependencyInjection
             var resultType = genericQueryType.GenericTypeArguments[0];
 
             // validators
-            serviceCollection.AddImplementationCollection(assembly, queryType, typeof(IQueryValidator<>));
+            serviceCollection.AddImplementationCollection(assemblies, queryType, typeof(IQueryValidator<>));
 
             // authorization
-            serviceCollection.AddImplementationCollection(assembly, queryType, typeof(IQueryAuthorization<>));
+            serviceCollection.AddImplementationCollection(assemblies, queryType, typeof(IQueryAuthorization<>));
 
             // handlers
             var queryHandlerType = typeof(IQueryHandler<,>).MakeGenericType(queryType, resultType);
-            var queryHandlers = assembly.GetClassTypesWhichImplementInterface(queryHandlerType);
+            var queryHandlers = assemblies.GetClassTypesWhichImplementInterface(queryHandlerType);
             if (queryHandlers.Count != 1)
             {
                 throw new Exception(
@@ -185,17 +187,17 @@ public static class DependencyInjection
 
     private static void AddPreProcessing(
         this IServiceCollection serviceCollection,
-        Assembly assembly,
+        List<Assembly> assemblies,
         Type commandType)
     {
         // validators
-        serviceCollection.AddImplementationCollection(assembly, commandType, typeof(ICommandValidator<>));
+        serviceCollection.AddImplementationCollection(assemblies, commandType, typeof(ICommandValidator<>));
 
         // authorization
-        serviceCollection.AddImplementationCollection(assembly, commandType, typeof(ICommandAuthorization<>));
+        serviceCollection.AddImplementationCollection(assemblies, commandType, typeof(ICommandAuthorization<>));
 
         // pre-processors
-        serviceCollection.AddImplementationCollection(assembly, commandType, typeof(ICommandPreProcessor<>));
+        serviceCollection.AddImplementationCollection(assemblies, commandType, typeof(ICommandPreProcessor<>));
 
         // PreProcessingRunner
         serviceCollection.AddImplementation(typeof(PreProcessingRunner<>), commandType);
@@ -203,13 +205,13 @@ public static class DependencyInjection
 
     private static void AddPostProcessing(
         this IServiceCollection serviceCollection,
-        Assembly assembly,
+        List<Assembly> assemblies,
         Type commandType,
         Type resultType)
     {
         // validators
         serviceCollection.AddImplementationCollection(
-            assembly,
+            assemblies,
             commandType,
             resultType,
             typeof(ICommandPostProcessor<,>));
@@ -220,12 +222,12 @@ public static class DependencyInjection
 
     private static void AddPostProcessing(
         this IServiceCollection serviceCollection,
-        Assembly assembly,
+        List<Assembly> assemblies,
         Type commandType)
     {
         // validators
         serviceCollection.AddImplementationCollection(
-            assembly,
+            assemblies,
             commandType,
             typeof(ICommandPostProcessor<>));
 
@@ -282,14 +284,16 @@ public static class DependencyInjection
 
     private static void AddImplementationCollection(
         this IServiceCollection serviceCollection,
-        Assembly assembly,
+        List<Assembly> assemblies,
         Type commandType,
         Type genericInterfaceType)
     {
         var interfaceType = genericInterfaceType.MakeGenericType(commandType);
-        var implementationTypes = assembly.GetClassTypesWhichImplementInterface(interfaceType);
+        var implementationTypes = assemblies.GetClassTypesWhichImplementInterface(interfaceType);
         var implementationCollectionType = typeof(List<>).MakeGenericType(interfaceType);
-        serviceCollection.AddScoped(implementationCollectionType, serviceProvider =>
+        serviceCollection.AddScoped(
+            implementationCollectionType,
+            serviceProvider =>
         {
             var implementationInstances =
                 implementationTypes
@@ -301,15 +305,17 @@ public static class DependencyInjection
 
     private static void AddImplementationCollection(
         this IServiceCollection serviceCollection,
-        Assembly assembly,
+        List<Assembly> assemblies,
         Type commandType,
         Type resultType,
         Type genericInterfaceType)
     {
         var interfaceType = genericInterfaceType.MakeGenericType(commandType, resultType);
-        var implementationTypes = assembly.GetClassTypesWhichImplementInterface(interfaceType);
+        var implementationTypes = assemblies.GetClassTypesWhichImplementInterface(interfaceType);
         var implementationCollectionType = typeof(List<>).MakeGenericType(interfaceType);
-        serviceCollection.AddScoped(implementationCollectionType, serviceProvider =>
+        serviceCollection.AddScoped(
+            implementationCollectionType,
+            serviceProvider =>
         {
             var implementationInstances =
                 implementationTypes
