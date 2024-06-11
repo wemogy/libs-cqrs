@@ -8,20 +8,20 @@ using Wemogy.CQRS.Abstractions;
 using Wemogy.CQRS.Commands.Abstractions;
 using Wemogy.CQRS.Extensions.AzureServiceBus.Config;
 using Wemogy.CQRS.Extensions.AzureServiceBus.Processors;
+using Wemogy.CQRS.Setup;
 
 namespace Wemogy.CQRS.Extensions.AzureServiceBus.Setup
 {
-    public class AzureServiceBusSetupEnvironment
+    public class AzureServiceBusSetupEnvironment : CQRSSetupEnvironment
     {
         private readonly ServiceBusClient _serviceBusClient;
-        private readonly IServiceCollection _serviceCollection;
         private readonly Dictionary<Type, DelayedProcessingOptions> _delayedProcessingOptions;
         private readonly HashSet<Type> _commandTypesWithRegisteredProcessor;
 
         public AzureServiceBusSetupEnvironment(ServiceBusClient serviceBusClient, IServiceCollection serviceCollection)
+            : base(serviceCollection)
         {
             _serviceBusClient = serviceBusClient;
-            _serviceCollection = serviceCollection;
             _delayedProcessingOptions = new Dictionary<Type, DelayedProcessingOptions>();
             _commandTypesWithRegisteredProcessor = new HashSet<Type>();
         }
@@ -36,7 +36,7 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Setup
         {
             var queueName = GetQueueName<TCommand>();
 
-            _serviceCollection.AddHostedService<IDelayedCommandProcessorHostedService<TCommand>>(_ =>
+            ServiceCollection.AddHostedService<IDelayedCommandProcessorHostedService<TCommand>>(_ =>
             {
                 var serviceBusProcessorOptions = new ServiceBusProcessorOptions()
                 {
@@ -46,7 +46,7 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Setup
                 configureServiceBusProcessorOptions?.Invoke(serviceBusProcessorOptions);
 
                 var serviceBusProcessor = _serviceBusClient.CreateProcessor(queueName, serviceBusProcessorOptions);
-                var processor = new AzureServiceBusCommandProcessor<TCommand>(serviceBusProcessor, _serviceCollection);
+                var processor = new AzureServiceBusCommandProcessor<TCommand>(serviceBusProcessor, ServiceCollection);
 
                 return processor;
             });
@@ -77,7 +77,7 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Setup
                     "You need to enable session support using ConfigureDelayedProcessing before using AddDelayedSessionProcessor");
             }
 
-            _serviceCollection.AddHostedService<IDelayedCommandProcessorHostedService<TCommand>>(_ =>
+            ServiceCollection.AddHostedService<IDelayedCommandProcessorHostedService<TCommand>>(_ =>
             {
                 var serviceBusSessionProcessorOptions = new ServiceBusSessionProcessorOptions()
                 {
@@ -94,7 +94,7 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Setup
                     serviceBusSessionProcessorOptions);
                 var processor = new AzureServiceBusCommandSessionProcessor<TCommand>(
                     serviceBusSessionProcessor,
-                    _serviceCollection);
+                    ServiceCollection);
 
                 return processor;
             });
