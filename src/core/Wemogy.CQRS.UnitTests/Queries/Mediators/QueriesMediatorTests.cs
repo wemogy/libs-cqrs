@@ -4,6 +4,7 @@ using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Wemogy.Core.Errors.Exceptions;
 using Wemogy.CQRS.Queries.Abstractions;
+using Wemogy.CQRS.UnitTests.AssemblyA.Queries;
 using Wemogy.CQRS.UnitTests.TestApplication;
 using Wemogy.CQRS.UnitTests.TestApplication.Queries.GetUser;
 using Xunit;
@@ -67,5 +68,22 @@ public class QueriesMediatorTests
         exception.Should().NotBeNull()
             .And.BeOfType<FluentValidation.ValidationException>()
             .Which.Message.Should().Contain(nameof(GetUserQuery.FirstName));
+    }
+
+    [Fact]
+    public async Task QueryAsync_ShouldSupportMultipleAssemblyDefinitions()
+    {
+        // Arrange
+        var serviceCollection = new ServiceCollection();
+        serviceCollection.AddTestApplication();
+        var serviceProvider = serviceCollection.BuildServiceProvider();
+        var queries = serviceProvider.GetRequiredService<IQueries>();
+        var getUserQuery = new GetUserActivityQuery();
+
+        // Act
+        var userActivity = await queries.QueryAsync(getUserQuery);
+
+        // Assert
+        userActivity.Should().Be(1);
     }
 }
