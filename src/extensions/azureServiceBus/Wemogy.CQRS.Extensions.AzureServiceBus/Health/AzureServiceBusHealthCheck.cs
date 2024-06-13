@@ -30,6 +30,7 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Health
 
         public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
         {
+            using var activity = Observability.DefaultActivities.StartActivity();
             try
             {
                 var client = ClientConnections.GetOrAdd(_queueName, _ => new ServiceBusClient(_connectionString));
