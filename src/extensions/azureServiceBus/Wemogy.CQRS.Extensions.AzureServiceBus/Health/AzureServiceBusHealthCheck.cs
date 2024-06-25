@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using OpenTelemetry.Trace;
 
 namespace Wemogy.CQRS.Extensions.AzureServiceBus.Health
 {
@@ -30,6 +31,7 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Health
 
         public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
         {
+            using var activity = Observability.DefaultActivities.StartActivity();
             try
             {
                 var client = ClientConnections.GetOrAdd(_queueName, _ => new ServiceBusClient(_connectionString));
@@ -39,6 +41,8 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Health
             }
             catch (TaskCanceledException ex)
             {
+                activity?.RecordException(ex);
+
                 // propagate the exception if the cancellation token has been canceled
                 if (cancellationToken.IsCancellationRequested)
                 {
@@ -49,6 +53,7 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Health
             }
             catch (Exception ex)
             {
+                activity?.RecordException(ex);
                 return new HealthCheckResult(context.Registration.FailureStatus, exception: ex);
             }
         }
