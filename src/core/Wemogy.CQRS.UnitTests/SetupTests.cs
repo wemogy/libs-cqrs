@@ -28,10 +28,10 @@ public class SetupTests
         var serviceProvider = serviceCollection.BuildServiceProvider();
 
         // Commands
-        serviceProvider.GetRequiredService<List<ICommandValidator<CreateUserCommand>>>().Should().HaveCount(1);
-        serviceProvider.GetRequiredService<List<ICommandAuthorization<CreateUserCommand>>>().Should().HaveCount(1);
-        serviceProvider.GetRequiredService<List<ICommandPreProcessor<CreateUserCommand>>>().Should().HaveCount(1);
-        serviceProvider.GetRequiredService<List<ICommandPostProcessor<CreateUserCommand, User>>>().Should()
+        serviceProvider.GetRequiredService<IEnumerable<ICommandValidator<CreateUserCommand>>>().Should().HaveCount(1);
+        serviceProvider.GetRequiredService<IEnumerable<ICommandAuthorization<CreateUserCommand>>>().Should().HaveCount(1);
+        serviceProvider.GetRequiredService<IEnumerable<ICommandPreProcessor<CreateUserCommand>>>().Should().HaveCount(1);
+        serviceProvider.GetRequiredService<IEnumerable<ICommandPostProcessor<CreateUserCommand, User>>>().Should()
             .HaveCount(1);
         serviceProvider.GetService<ICommandHandler<CreateUserCommand, User>>().Should().NotBeNull();
         serviceProvider.GetService<PreProcessingRunner<CreateUserCommand>>().Should().NotBeNull();
@@ -40,8 +40,8 @@ public class SetupTests
         serviceProvider.GetService<ICommands>().Should().NotBeNull();
 
         // Queries
-        serviceProvider.GetRequiredService<List<IQueryValidator<GetUserQuery>>>().Should().HaveCount(1);
-        serviceProvider.GetRequiredService<List<IQueryAuthorization<GetUserQuery>>>().Should().HaveCount(1);
+        serviceProvider.GetRequiredService<IEnumerable<IQueryValidator<GetUserQuery>>>().Should().HaveCount(1);
+        serviceProvider.GetRequiredService<IEnumerable<IQueryAuthorization<GetUserQuery>>>().Should().HaveCount(1);
         serviceProvider.GetService<IQueries>().Should().NotBeNull();
     }
 }

@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Wemogy.Core.Errors;
 using Wemogy.Core.Extensions;
 using Wemogy.Core.Monitoring;
+using Wemogy.CQRS.Abstractions;
 using Wemogy.CQRS.Commands.Abstractions;
 using Wemogy.CQRS.Commands.Mediators;
 using Wemogy.CQRS.Commands.Registries;
-using Wemogy.CQRS.Commands.Resolvers;
 using Wemogy.CQRS.Commands.Runners;
 using Wemogy.CQRS.Common.ValueObjects;
 using Wemogy.CQRS.Extensions;
@@ -17,7 +19,9 @@ using Wemogy.CQRS.Queries.Abstractions;
 using Wemogy.CQRS.Queries.Mediators;
 using Wemogy.CQRS.Queries.Registries;
 using Wemogy.CQRS.Queries.Runners;
+using Wemogy.CQRS.Resolvers;
 using Wemogy.CQRS.Setup;
+using Exception = System.Exception;
 
 namespace Wemogy.CQRS;
 
@@ -51,12 +55,25 @@ public static class DependencyInjection
         assemblies = assemblies.Distinct().ToList();
 
         dependencies ??= new Dictionary<Type, Type>();
-        serviceCollection.AddCommands(assemblies, dependencies);
+        serviceCollection.AddCommandQueryDependencies(dependencies);
+
+        serviceCollection.AddCommands(assemblies);
         serviceCollection.AddQueries(assemblies);
-        return new CQRSSetupEnvironment(serviceCollection);
+
+        var setupEnvironment = new CQRSSetupEnvironment(serviceCollection);
+        serviceCollection.TryAddSingleton(setupEnvironment);
+        return setupEnvironment;
     }
 
-    private static void AddCommands(this IServiceCollection serviceCollection, List<Assembly> assemblies, Dictionary<Type, Type> dependencies)
+    private static void AddCommandQueryDependencies(this IServiceCollection serviceCollection, Dictionary<Type, Type> dependencies)
+    {
+        var commandQueryDependencies = new CommandQueryDependencies(dependencies);
+        serviceCollection.TryAddScoped<ICommandQueryDependencyResolver>(
+            provider =>
+                new CommandQueryDependencyResolver(provider, commandQueryDependencies));
+    }
+
+    private static void AddCommands(this IServiceCollection serviceCollection, List<Assembly> assemblies)
     {
         var commandTypes = assemblies.GetClassTypesWhichImplementInterface(typeof(ICommand<>));
         commandTypes.AddRange(assemblies.GetClassTypesWhichImplementInterface(typeof(ICommand)));
@@ -67,60 +84,43 @@ public static class DependencyInjection
             {
                 if (!commandType.InheritsOrImplements(typeof(ICommand), out genericCommandType) || genericCommandType == null)
                 {
-                    throw new Exception("Command type must inherit from ICommand<> or ICommand");
+                    throw Error.Unexpected(
+                        "InvalidCommandType",
+                        $"The command type {commandType.FullName} must inherit from ICommand<> or ICommand");
                 }
             }
 
             var resultType = genericCommandType.GenericTypeArguments.ElementAtOrDefault(0);
 
-            // pre-processing
-            serviceCollection.AddPreProcessing(assemblies, commandType);
-
             if (resultType == null)
             {
-                // command handler
-                serviceCollection.AddScopedGenericTypeWithImplementationFromAssembly(
-                    assemblies,
-                    typeof(ICommandHandler<>),
-                    commandType);
-
                 // command runners
                 serviceCollection.AddCommandRunners(commandType);
-
-                // post-processing
-                serviceCollection.AddPostProcessing(assemblies, commandType);
             }
             else
             {
-                // command handler
-                serviceCollection.AddScopedGenericTypeWithImplementationFromAssembly(
-                    assemblies,
-                    typeof(ICommandHandler<,>),
-                    commandType,
-                    resultType);
-
                 // command runners
                 serviceCollection.AddCommandRunners(commandType, resultType);
-
-                // post-processing
-                serviceCollection.AddPostProcessing(assemblies, commandType, resultType);
             }
         }
 
-        // ScheduledCommandDependencyResolver
-        serviceCollection.AddSingleton(
-            new ScheduledCommandDependencies(dependencies));
-        serviceCollection.AddScoped<IScheduledCommandDependencyResolver>(
-            provider =>
-            new ScheduledCommandDependencyResolver(provider, dependencies));
+        // PreProcessing
+        serviceCollection.AddPreProcessingServices(assemblies);
+
+        // CommandHandlers
+        serviceCollection.AddImplementationsOfGenericInterfaceScoped(typeof(ICommandHandler<>), assemblies);
+        serviceCollection.AddImplementationsOfGenericInterfaceScoped(typeof(ICommandHandler<,>), assemblies);
+
+        // Post-Processing
+        serviceCollection.AddPostProcessingServices(assemblies);
 
         // Add ICommands mediator
-        serviceCollection.AddScoped<ICommands, CommandsMediator>();
+        serviceCollection.TryAddScoped<ICommands, CommandsMediator>();
 
         // Add Registries
-        serviceCollection.AddSingleton<CommandRunnerRegistry>();
-        serviceCollection.AddSingleton<ScheduledCommandRunnerRegistry>();
-        serviceCollection.AddSingleton<RecurringCommandRunnerRegistry>();
+        serviceCollection.TryAddSingleton<CommandRunnerRegistry>();
+        serviceCollection.TryAddSingleton<ScheduledCommandRunnerRegistry>();
+        serviceCollection.TryAddSingleton<RecurringCommandRunnerRegistry>();
     }
 
     private static void AddQueries(this IServiceCollection serviceCollection, List<Assembly> assemblies)
@@ -136,34 +136,25 @@ public static class DependencyInjection
 
             var resultType = genericQueryType.GenericTypeArguments[0];
 
-            // validators
-            serviceCollection.AddImplementationCollection(assemblies, queryType, typeof(IQueryValidator<>));
-
-            // authorization
-            serviceCollection.AddImplementationCollection(assemblies, queryType, typeof(IQueryAuthorization<>));
-
-            // handlers
-            var queryHandlerType = typeof(IQueryHandler<,>).MakeGenericType(queryType, resultType);
-            var queryHandlers = assemblies.GetClassTypesWhichImplementInterface(queryHandlerType);
-            if (queryHandlers.Count != 1)
-            {
-                throw new Exception(
-                    $"There must be exactly one IQueryHandler registered for query type {queryType.FullName}");
-            }
-
-            var queryHandlerImplementationType = queryHandlers[0];
-            serviceCollection.AddScoped(queryHandlerType, queryHandlerImplementationType);
-
             // query runner
             var queryRunnerType = typeof(QueryRunner<,>).MakeGenericType(queryType, resultType);
             serviceCollection.AddScoped(queryRunnerType);
         }
 
+        // IQueryValidator implementations
+        serviceCollection.AddImplementationsOfGenericInterfaceScoped(typeof(IQueryValidator<>), assemblies);
+
+        // IQueryAuthorization implementations
+        serviceCollection.AddImplementationsOfGenericInterfaceScoped(typeof(IQueryAuthorization<>), assemblies);
+
+        // IQueryHandlers implementations
+        serviceCollection.AddImplementationsOfGenericInterfaceScoped(typeof(IQueryHandler<,>), assemblies);
+
         // Add IQueries mediator
-        serviceCollection.AddScoped<IQueries, QueriesMediator>();
+        serviceCollection.TryAddScoped<IQueries, QueriesMediator>();
 
         // Add QueryRunnerRegistry
-        serviceCollection.AddSingleton<QueryRunnerRegistry>();
+        serviceCollection.TryAddSingleton<QueryRunnerRegistry>();
     }
 
     private static void AddImplementation(
@@ -185,54 +176,33 @@ public static class DependencyInjection
         serviceCollection.AddScoped(implementationType);
     }
 
-    private static void AddPreProcessing(
+    private static void AddPreProcessingServices(
         this IServiceCollection serviceCollection,
-        List<Assembly> assemblies,
-        Type commandType)
+        List<Assembly> assemblies)
     {
         // validators
-        serviceCollection.AddImplementationCollection(assemblies, commandType, typeof(ICommandValidator<>));
+        serviceCollection.AddImplementationsOfGenericInterfaceScoped(typeof(ICommandValidator<>), assemblies);
 
         // authorization
-        serviceCollection.AddImplementationCollection(assemblies, commandType, typeof(ICommandAuthorization<>));
+        serviceCollection.AddImplementationsOfGenericInterfaceScoped(typeof(ICommandAuthorization<>), assemblies);
 
         // pre-processors
-        serviceCollection.AddImplementationCollection(assemblies, commandType, typeof(ICommandPreProcessor<>));
-
-        // PreProcessingRunner
-        serviceCollection.AddImplementation(typeof(PreProcessingRunner<>), commandType);
+        serviceCollection.AddImplementationsOfGenericInterfaceScoped(typeof(ICommandPreProcessor<>), assemblies);
     }
 
-    private static void AddPostProcessing(
+    private static void AddPostProcessingServices(
         this IServiceCollection serviceCollection,
-        List<Assembly> assemblies,
-        Type commandType,
-        Type resultType)
+        List<Assembly> assemblies)
     {
-        // validators
-        serviceCollection.AddImplementationCollection(
-            assemblies,
-            commandType,
-            resultType,
-            typeof(ICommandPostProcessor<,>));
+        // Post-processing of commands without result
+        serviceCollection.AddImplementationsOfGenericInterfaceScoped(
+            typeof(ICommandPostProcessor<>),
+            assemblies);
 
-        // PostProcessingRunner
-        serviceCollection.AddImplementation(typeof(PostProcessingRunner<,>), commandType, resultType);
-    }
-
-    private static void AddPostProcessing(
-        this IServiceCollection serviceCollection,
-        List<Assembly> assemblies,
-        Type commandType)
-    {
-        // validators
-        serviceCollection.AddImplementationCollection(
-            assemblies,
-            commandType,
-            typeof(ICommandPostProcessor<>));
-
-        // PostProcessingRunner
-        serviceCollection.AddImplementation(typeof(VoidPostProcessingRunner<>), commandType);
+        // Post-processing of commands with result
+        serviceCollection.AddImplementationsOfGenericInterfaceScoped(
+            typeof(ICommandPostProcessor<,>),
+            assemblies);
     }
 
     private static void AddCommandRunners(
@@ -241,7 +211,7 @@ public static class DependencyInjection
         Type resultType)
     {
         // command runner
-        serviceCollection.AddScopedGenericType(
+        serviceCollection.TryAddScopedGenericType(
             typeof(CommandRunner<,>),
             commandType,
             resultType);
@@ -254,10 +224,16 @@ public static class DependencyInjection
             scheduledCommandRunnerType);
 
         // recurring command runner
-        serviceCollection.AddScopedGenericType(
+        serviceCollection.TryAddScopedGenericType(
             typeof(RecurringCommandRunner<,>),
             commandType,
             resultType);
+
+        // PreProcessingRunner
+        serviceCollection.AddImplementation(typeof(PreProcessingRunner<>), commandType);
+
+        // PostProcessingRunner
+        serviceCollection.AddImplementation(typeof(PostProcessingRunner<,>), commandType, resultType);
     }
 
     private static void AddCommandRunners(
@@ -265,7 +241,7 @@ public static class DependencyInjection
         Type commandType)
     {
         // command runner
-        serviceCollection.AddScopedGenericType(
+        serviceCollection.TryAddScopedGenericType(
             typeof(VoidCommandRunner<>),
             commandType);
 
@@ -277,52 +253,15 @@ public static class DependencyInjection
             scheduledCommandRunnerType);
 
         // recurring command runner
-        serviceCollection.AddScopedGenericType(
+        serviceCollection.TryAddScopedGenericType(
             typeof(VoidRecurringCommandRunner<>),
             commandType);
-    }
 
-    private static void AddImplementationCollection(
-        this IServiceCollection serviceCollection,
-        List<Assembly> assemblies,
-        Type commandType,
-        Type genericInterfaceType)
-    {
-        var interfaceType = genericInterfaceType.MakeGenericType(commandType);
-        var implementationTypes = assemblies.GetClassTypesWhichImplementInterface(interfaceType);
-        var implementationCollectionType = typeof(List<>).MakeGenericType(interfaceType);
-        serviceCollection.AddScoped(
-            implementationCollectionType,
-            serviceProvider =>
-        {
-            var implementationInstances =
-                implementationTypes
-                    .Select(x => ActivatorUtilities.CreateInstance(serviceProvider, x))
-                    .ToListOfType(implementationCollectionType);
-            return implementationInstances;
-        });
-    }
+        // PreProcessingRunner
+        serviceCollection.AddImplementation(typeof(PreProcessingRunner<>), commandType);
 
-    private static void AddImplementationCollection(
-        this IServiceCollection serviceCollection,
-        List<Assembly> assemblies,
-        Type commandType,
-        Type resultType,
-        Type genericInterfaceType)
-    {
-        var interfaceType = genericInterfaceType.MakeGenericType(commandType, resultType);
-        var implementationTypes = assemblies.GetClassTypesWhichImplementInterface(interfaceType);
-        var implementationCollectionType = typeof(List<>).MakeGenericType(interfaceType);
-        serviceCollection.AddScoped(
-            implementationCollectionType,
-            serviceProvider =>
-        {
-            var implementationInstances =
-                implementationTypes
-                    .Select(x => ActivatorUtilities.CreateInstance(serviceProvider, x))
-                    .ToListOfType(implementationCollectionType);
-            return implementationInstances;
-        });
+        // PostProcessingRunner
+        serviceCollection.AddImplementation(typeof(VoidPostProcessingRunner<>), commandType);
     }
 
     /// <summary>

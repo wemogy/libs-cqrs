@@ -24,5 +24,6 @@
   <ItemGroup>
     <ProjectReference Include="../Wemogy.CQRS/Wemogy.CQRS.csproj" />
     <ProjectReference Include="..\Wemogy.CQRS.UnitTests.AssemblyA\Wemogy.CQRS.UnitTests.AssemblyA.csproj" />
+    <ProjectReference Include="..\Wemogy.CQRS.UnitTests.AssemblyB\Wemogy.CQRS.UnitTests.AssemblyB.csproj" />
   </ItemGroup>
 </Project>

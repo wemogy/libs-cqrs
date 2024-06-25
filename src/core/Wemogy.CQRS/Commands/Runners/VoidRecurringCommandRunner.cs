@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using Wemogy.Core.Errors;
+using Wemogy.CQRS.Abstractions;
 using Wemogy.CQRS.Commands.Abstractions;
 using Wemogy.CQRS.Common.ValueObjects;
 
@@ -8,23 +9,23 @@ namespace Wemogy.CQRS.Commands.Runners;
 public class VoidRecurringCommandRunner<TCommand>
     where TCommand : ICommand
 {
+    private readonly ICommandQueryDependencyResolver _commandQueryDependencyResolver;
     private readonly PreProcessingRunner<TCommand> _preProcessingRunner;
     private readonly ICommandHandler<TCommand> _commandHandler;
     private readonly VoidPostProcessingRunner<TCommand> _postProcessingRunner;
     private readonly IRecurringCommandService? _recurringCommandService;
-    private readonly IScheduledCommandDependencyResolver _scheduledCommandDependencyResolver;
 
     public VoidRecurringCommandRunner(
+        ICommandQueryDependencyResolver commandQueryDependencyResolver,
         PreProcessingRunner<TCommand> preProcessingRunner,
         ICommandHandler<TCommand> commandHandler,
         VoidPostProcessingRunner<TCommand> postProcessingRunner,
-        IScheduledCommandDependencyResolver scheduledCommandDependencyResolver,
         IRecurringCommandService? recurringCommandService = null)
     {
+        _commandQueryDependencyResolver = commandQueryDependencyResolver;
         _preProcessingRunner = preProcessingRunner;
         _commandHandler = commandHandler;
         _postProcessingRunner = postProcessingRunner;
-        _scheduledCommandDependencyResolver = scheduledCommandDependencyResolver;
         _recurringCommandService = recurringCommandService;
     }
 
@@ -41,7 +42,7 @@ public class VoidRecurringCommandRunner<TCommand>
         await _preProcessingRunner.RunPreChecksAsync(command);
 
         // schedule recurring command
-        var deps = _scheduledCommandDependencyResolver.ResolveDependencies();
+        var deps = _commandQueryDependencyResolver.ResolveDependencies();
         var helper = new ScheduledCommand<TCommand>(
             deps,
             command);
