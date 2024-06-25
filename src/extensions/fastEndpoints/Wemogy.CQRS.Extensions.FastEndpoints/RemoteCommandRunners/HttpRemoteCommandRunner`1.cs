@@ -26,9 +26,7 @@ public class HttpRemoteCommandRunner<TCommand> : IRemoteCommandRunner<TCommand>
 
     public async Task RunAsync(CommandRequest<TCommand> command)
     {
-        // ToDo: Get configuration for the TCommand
-
-        // ToDo: Http call to the remote service
+        // Http call to the remote service
         var request = new RestRequest(_urlPath)
             .AddJsonBody(command);
 
@@ -42,8 +40,6 @@ public class HttpRemoteCommandRunner<TCommand> : IRemoteCommandRunner<TCommand>
                 {
                     throw response.ErrorException ?? new Exception(response.Content);
                 }
-
-                var poc = Newtonsoft.Json.JsonConvert.DeserializeObject<Exception>(response.Content);
 
                 // ToDo: Handle the exception information
                 var exceptionInformation = response.Content?.FromJson<ExceptionInformation>();

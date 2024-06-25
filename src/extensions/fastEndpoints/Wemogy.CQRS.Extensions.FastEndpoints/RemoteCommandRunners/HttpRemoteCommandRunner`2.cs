@@ -24,9 +24,7 @@ public class HttpRemoteCommandRunner<TCommand, TResult> : IRemoteCommandRunner<T
 
     public async Task<TResult> RunAsync(CommandRequest<TCommand> command)
     {
-        // ToDo: Get configuration for the TCommand
-
-        // ToDo: Http call to the remote service
+        // Http call to the remote service
         var request = new RestRequest(_urlPath)
             .AddJsonBody(command);
 
