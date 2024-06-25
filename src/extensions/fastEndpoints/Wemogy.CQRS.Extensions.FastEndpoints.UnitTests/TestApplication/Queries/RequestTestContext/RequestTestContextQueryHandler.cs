@@ -5,6 +5,8 @@ namespace Wemogy.CQRS.Extensions.FastEndpoints.UnitTests.TestApplication.Queries
 
 public class RequestTestContextQueryHandler : IQueryHandler<RequestTestContextQuery, TestContext>
 {
+    public static readonly Stack<TestContext> ContextHistory = new Stack<TestContext>();
+
     private readonly TestContext _testContext;
 
     public RequestTestContextQueryHandler(TestContext testContext)
@@ -14,6 +16,7 @@ public class RequestTestContextQueryHandler : IQueryHandler<RequestTestContextQu
 
     public Task<TestContext> HandleAsync(RequestTestContextQuery query, CancellationToken cancellationToken)
     {
+        ContextHistory.Push(_testContext);
         return Task.FromResult(_testContext);
     }
 }

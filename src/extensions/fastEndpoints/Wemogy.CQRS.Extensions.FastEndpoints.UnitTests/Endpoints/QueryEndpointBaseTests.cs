@@ -21,7 +21,7 @@ public class QueryEndpointBaseTests : IClassFixture<WebApplicationFactory<Progra
     }
 
     [Fact]
-    public async Task CommandEndpointBase_ShouldAddDependenciesFromQueryRequest()
+    public async Task QueryEndpointBase_ShouldAddDependenciesFromQueryRequest()
     {
         // Arrange
         var serviceCollection = new ServiceCollection();
@@ -48,11 +48,10 @@ public class QueryEndpointBaseTests : IClassFixture<WebApplicationFactory<Progra
             });
 
         // Act
-        // ToDo: fix this test
         await endpoint.HandleAsync(queryRequest, CancellationToken.None);
 
         // Assert
-        LogTestContextCommandHandler.LogHistory.Should().ContainSingle().Which.UserId.Should().Be(testContext.UserId);
+        RequestTestContextQueryHandler.ContextHistory.Should().ContainSingle().Which.UserId.Should().Be(testContext.UserId);
     }
 
     [Fact]
