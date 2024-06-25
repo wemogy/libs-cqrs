@@ -3,7 +3,7 @@ using Wemogy.Core.Extensions;
 
 namespace Wemogy.CQRS.Common.ValueObjects;
 
-public class ScheduledCommandDependency
+public class CommandQueryDependency
 {
     public Type DependencyType { get; set; }
 
@@ -11,15 +11,15 @@ public class ScheduledCommandDependency
 
     public string Value { get; set; }
 
-    public ScheduledCommandDependency(Type dependencyType, Type implementationType, string value)
+    public CommandQueryDependency(Type dependencyType, Type implementationType, string value)
     {
         DependencyType = dependencyType;
         ImplementationType = implementationType;
         Value = value;
     }
 
-    public static ScheduledCommandDependency Create(Type dependencyType, Type implementationType, object value)
+    public static CommandQueryDependency Create(Type dependencyType, Type implementationType, object value)
     {
-        return new ScheduledCommandDependency(dependencyType, implementationType, value.ToJson());
+        return new CommandQueryDependency(dependencyType, implementationType, value.ToJson());
     }
 }

@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using Wemogy.Core.Errors;
+using Wemogy.CQRS.Abstractions;
 using Wemogy.CQRS.Commands.Abstractions;
 using Wemogy.CQRS.Commands.ValueObjects;
 using Wemogy.CQRS.Common.ValueObjects;
@@ -9,24 +10,23 @@ namespace Wemogy.CQRS.Commands.Runners;
 public class ScheduledCommandRunner<TCommand, TResult> : IScheduledCommandRunner<TCommand>
     where TCommand : ICommand<TResult>
 {
-    private readonly IScheduledCommandDependencyResolver _scheduledCommandDependencyResolver;
+    private readonly ICommandQueryDependencyResolver _commandQueryDependencyResolver;
     private readonly PreProcessingRunner<TCommand> _preProcessingRunner;
     private readonly ICommandHandler<TCommand, TResult> _commandHandler;
     private readonly PostProcessingRunner<TCommand, TResult> _postProcessingRunner;
     private readonly IScheduledCommandService? _scheduledCommandService;
 
     public ScheduledCommandRunner(
-        IScheduledCommandDependencyResolver scheduledCommandDependencyResolver,
+        ICommandQueryDependencyResolver commandQueryDependencyResolver,
         PreProcessingRunner<TCommand> preProcessingRunner,
         ICommandHandler<TCommand, TResult> commandHandler,
         PostProcessingRunner<TCommand, TResult> postProcessingRunner,
         IScheduledCommandService? scheduledCommandService = null)
     {
-        _scheduledCommandDependencyResolver = scheduledCommandDependencyResolver;
+        _commandQueryDependencyResolver = commandQueryDependencyResolver;
         _preProcessingRunner = preProcessingRunner;
         _commandHandler = commandHandler;
         _postProcessingRunner = postProcessingRunner;
-        _scheduledCommandDependencyResolver = scheduledCommandDependencyResolver;
         _scheduledCommandService = scheduledCommandService;
     }
 
@@ -45,7 +45,7 @@ public class ScheduledCommandRunner<TCommand, TResult> : IScheduledCommandRunner
         await _preProcessingRunner.RunPreChecksAsync(command);
 
         // build the scheduled command
-        var deps = _scheduledCommandDependencyResolver.ResolveDependencies();
+        var deps = _commandQueryDependencyResolver.ResolveDependencies();
         var helper = new ScheduledCommand<TCommand>(
             deps,
             command);

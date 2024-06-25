@@ -19,7 +19,6 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
     {
         private readonly ServiceBusProcessor _serviceBusProcessor;
         private readonly IServiceCollection _serviceCollection;
-        private readonly ScheduledCommandDependencies _scheduledCommandDependencies;
         private readonly string _handleMessageActivityName;
         private bool _isStarted;
 
@@ -40,9 +39,6 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
                 Console.WriteLine(args.Exception);
                 return Task.CompletedTask;
             };
-            _scheduledCommandDependencies = serviceCollection
-                .BuildServiceProvider()
-                .GetRequiredService<ScheduledCommandDependencies>();
             _handleMessageActivityName = $"HandleMessageOf{typeof(TCommand).Name}";
         }
 
@@ -64,22 +60,7 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
                     "Scheduled command is null");
             }
 
-            foreach (var scheduledCommandDependency in _scheduledCommandDependencies)
-            {
-                services.AddScoped(
-                    scheduledCommandDependency.Key,
-                    _ =>
-                    {
-                        var dependency = scheduledCommand.GetDependency(scheduledCommandDependency.Key);
-
-                        if (dependency == null)
-                        {
-                            throw Error.Unexpected("DependencyNotFound", $"{scheduledCommandDependency.Key} dependency not found");
-                        }
-
-                        return dependency;
-                    });
-            }
+            services.AddCommandQueryDependencies(scheduledCommand.Dependencies);
 
             try
             {

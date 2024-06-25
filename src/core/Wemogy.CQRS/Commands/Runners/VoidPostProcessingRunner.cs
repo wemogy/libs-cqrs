@@ -7,9 +7,9 @@ namespace Wemogy.CQRS.Commands.Runners;
 public class VoidPostProcessingRunner<TCommand>
     where TCommand : ICommand
 {
-    private readonly List<ICommandPostProcessor<TCommand>> _postProcessors;
+    private readonly IEnumerable<ICommandPostProcessor<TCommand>> _postProcessors;
 
-    public VoidPostProcessingRunner(List<ICommandPostProcessor<TCommand>> postProcessors)
+    public VoidPostProcessingRunner(IEnumerable<ICommandPostProcessor<TCommand>> postProcessors)
     {
         _postProcessors = postProcessors;
     }

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Wemogy.CQRS.Commands.Abstractions;
 using Wemogy.CQRS.UnitTests.TestApplication.Common.Contexts;
-using Void = Wemogy.CQRS.Commands.Structs.Void;
 
 namespace Wemogy.CQRS.Extensions.AzureServiceBus.UnitTests.Testing.Commands.PrintContext;
 
@@ -30,6 +29,6 @@ public class PrintContextCommandHandler : ICommandHandler<PrintContextCommand>
         }
 
         Console.WriteLine($"Context: {_myTestingContext.TenantId}");
-        return Task.FromResult(Void.Value);
+        return Task.CompletedTask;
     }
 }

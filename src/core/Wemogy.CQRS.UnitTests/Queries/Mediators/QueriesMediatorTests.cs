@@ -4,6 +4,7 @@ using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Wemogy.Core.Errors.Exceptions;
 using Wemogy.CQRS.Queries.Abstractions;
+using Wemogy.CQRS.UnitTests.AssemblyA;
 using Wemogy.CQRS.UnitTests.AssemblyA.Queries;
 using Wemogy.CQRS.UnitTests.TestApplication;
 using Wemogy.CQRS.UnitTests.TestApplication.Queries.GetUser;
@@ -75,7 +76,8 @@ public class QueriesMediatorTests
     {
         // Arrange
         var serviceCollection = new ServiceCollection();
-        serviceCollection.AddTestApplication();
+        serviceCollection.AddCQRS();
+        serviceCollection.AddAssemblyA();
         var serviceProvider = serviceCollection.BuildServiceProvider();
         var queries = serviceProvider.GetRequiredService<IQueries>();
         var getUserQuery = new GetUserActivityQuery();

@@ -7,14 +7,14 @@ namespace Wemogy.CQRS.Commands.Runners;
 public class PreProcessingRunner<TCommand>
     where TCommand : ICommandBase
 {
-    private readonly List<ICommandValidator<TCommand>> _commandValidators;
-    private readonly List<ICommandAuthorization<TCommand>> _commandAuthorizations;
-    private readonly List<ICommandPreProcessor<TCommand>> _commandPreProcessors;
+    private readonly IEnumerable<ICommandValidator<TCommand>> _commandValidators;
+    private readonly IEnumerable<ICommandAuthorization<TCommand>> _commandAuthorizations;
+    private readonly IEnumerable<ICommandPreProcessor<TCommand>> _commandPreProcessors;
 
     public PreProcessingRunner(
-        List<ICommandValidator<TCommand>> commandValidators,
-        List<ICommandAuthorization<TCommand>> commandAuthorizations,
-        List<ICommandPreProcessor<TCommand>> commandPreProcessors)
+        IEnumerable<ICommandValidator<TCommand>> commandValidators,
+        IEnumerable<ICommandAuthorization<TCommand>> commandAuthorizations,
+        IEnumerable<ICommandPreProcessor<TCommand>> commandPreProcessors)
     {
         _commandValidators = commandValidators;
         _commandAuthorizations = commandAuthorizations;

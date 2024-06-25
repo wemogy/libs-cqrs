@@ -10,4 +10,9 @@ public class CQRSSetupEnvironment
     {
         ServiceCollection = serviceCollection;
     }
+
+    protected CQRSSetupEnvironment(CQRSSetupEnvironment setupEnvironment)
+    {
+        ServiceCollection = setupEnvironment.ServiceCollection;
+    }
 }
