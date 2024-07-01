@@ -3,6 +3,7 @@ using RestSharp;
 using Wemogy.CQRS.Abstractions;
 using Wemogy.CQRS.Commands.Abstractions;
 using Wemogy.CQRS.Common.ValueObjects;
+using Wemogy.CQRS.Extensions.FastEndpoints.Common;
 
 namespace Wemogy.CQRS.Extensions.FastEndpoints.RemoteCommandRunners;
 
@@ -40,6 +41,6 @@ public class HttpRemoteCommandRunner<TCommand, TResult> : IRemoteCommandRunner<T
             return default!;
         }
 
-        return JsonSerializer.Deserialize<TResult>(response.Content) !;
+        return JsonSerializer.Deserialize<TResult>(response.Content, JsonOptions.JsonSerializerOptions) !;
     }
 }
