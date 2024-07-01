@@ -1,7 +1,9 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using RestSharp;
 using Wemogy.CQRS.Abstractions;
 using Wemogy.CQRS.Common.ValueObjects;
+using Wemogy.CQRS.Extensions.FastEndpoints.Common;
 using Wemogy.CQRS.Queries.Abstractions;
 
 namespace Wemogy.CQRS.Extensions.FastEndpoints.RemoteQueryRunners;
@@ -42,6 +44,6 @@ public class HttpRemoteQueryRunner<TQuery, TResult> : IRemoteQueryRunner<TQuery,
             return default!;
         }
 
-        return JsonSerializer.Deserialize<TResult>(response.Content) !;
+        return JsonSerializer.Deserialize<TResult>(response.Content, JsonOptions.JsonSerializerOptions) !;
     }
 }
