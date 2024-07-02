@@ -31,23 +31,28 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Health
 
         public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
         {
-            using var activity = Observability.DefaultActivities.StartActivity();
+            using var activity = Observability.DefaultActivities.StartActivity("AzureServiceBusHealthCheck.CheckHealth");
             try
             {
                 var client = ClientConnections.GetOrAdd(_queueName, _ => new ServiceBusClient(_connectionString));
                 var receiver = ServiceBusReceivers.GetOrAdd($"{nameof(AzureServiceBusHealthCheck)}_{_queueName}", client.CreateReceiver(_queueName));
+                using var peekMessageActivity = Observability.DefaultActivities.StartActivity("AzureServiceBusHealthCheck.PeekMessage");
                 _ = await receiver.PeekMessageAsync(cancellationToken: cancellationToken);
+                peekMessageActivity?.SetStatus(Status.Ok);
+                peekMessageActivity?.Stop();
                 return HealthCheckResult.Healthy();
             }
-            catch (TaskCanceledException ex)
+            catch (OperationCanceledException ex)
             {
-                activity?.RecordException(ex);
-
-                // propagate the exception if the cancellation token has been canceled
+                // propagate the exception if the cancellation token has been canceled, so that the health check is not marked as unhealthy
+                // the ExceptionHandlerMiddleware will handle the exception
                 if (cancellationToken.IsCancellationRequested)
                 {
                     throw;
                 }
+
+                // Record the exception in the activity
+                activity?.RecordException(ex);
 
                 return new HealthCheckResult(context.Registration.FailureStatus, exception: ex);
             }
