@@ -1,9 +1,13 @@
 using System.Text.Json;
 using RestSharp;
+using Wemogy.Core.Errors;
+using Wemogy.Core.Extensions;
+using Wemogy.Core.Json.ExceptionInformation;
 using Wemogy.CQRS.Abstractions;
 using Wemogy.CQRS.Commands.Abstractions;
 using Wemogy.CQRS.Common.ValueObjects;
 using Wemogy.CQRS.Extensions.FastEndpoints.Common;
+using Wemogy.CQRS.Extensions.FastEndpoints.Extensions;
 
 namespace Wemogy.CQRS.Extensions.FastEndpoints.RemoteCommandRunners;
 
@@ -33,7 +37,22 @@ public class HttpRemoteCommandRunner<TCommand, TResult> : IRemoteCommandRunner<T
 
         if (!response.IsSuccessful)
         {
-            throw new Exception($"Failed to run command {command.Command.GetType().Name}");
+            if (response.Headers == null || !response.Headers.HasJsonTypeHeader<ExceptionInformation>())
+            {
+                throw response.ErrorException ?? new Exception(response.Content);
+            }
+
+            var exceptionInformation = response.Content?.FromJson<ExceptionInformation>();
+
+            if (exceptionInformation == null)
+            {
+                throw Error.Unexpected(
+                    "ExceptionInformationMissing",
+                    "The response from the remote service did not contain any exception information.");
+            }
+
+            var exception = exceptionInformation.ToException();
+            throw exception;
         }
 
         if (response.Content == null)

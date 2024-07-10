@@ -10,7 +10,7 @@ public class ErrorHandlerPostProcessor : IGlobalPostProcessor
 {
     public async Task PostProcessAsync(IPostProcessorContext context, CancellationToken ct)
     {
-        if (!context.HasExceptionOccurred)
+        if (!context.HasExceptionOccurred || context.IsExceptionHandled())
         {
             return;
         }

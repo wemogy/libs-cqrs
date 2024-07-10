@@ -1,4 +1,5 @@
 using RestSharp;
+using Wemogy.Core.Errors;
 using Wemogy.Core.Extensions;
 using Wemogy.Core.Json.ExceptionInformation;
 using Wemogy.CQRS.Abstractions;
@@ -41,8 +42,17 @@ public class HttpRemoteCommandRunner<TCommand> : IRemoteCommandRunner<TCommand>
                     throw response.ErrorException ?? new Exception(response.Content);
                 }
 
-                // ToDo: Handle the exception information
                 var exceptionInformation = response.Content?.FromJson<ExceptionInformation>();
+
+                if (exceptionInformation == null)
+                {
+                    throw Error.Unexpected(
+                        "ExceptionInformationMissing",
+                        "The response from the remote service did not contain any exception information.");
+                }
+
+                var exception = exceptionInformation.ToException();
+                throw exception;
             }
         }
         catch (HttpRequestException e)

@@ -7,6 +7,7 @@ using Wemogy.Core.Extensions;
 using Wemogy.CQRS.Abstractions;
 using Wemogy.CQRS.Commands.Abstractions;
 using Wemogy.CQRS.Common.ValueObjects;
+using Wemogy.CQRS.Extensions.FastEndpoints.PostProcessors;
 using Wemogy.CQRS.Setup;
 using ICommand = Wemogy.CQRS.Commands.Abstractions.ICommand;
 
@@ -30,6 +31,7 @@ public class CommandEndpointBase<TCommand> : Endpoint<CommandRequest<TCommand>>
 
         // ToDo: remove this
         AllowAnonymous();
+        PostProcessor<CqrsEndpointExceptionPostProcessor<CommandRequest<TCommand>>>();
     }
 
     public override async Task HandleAsync(CommandRequest<TCommand> req, CancellationToken ct)
