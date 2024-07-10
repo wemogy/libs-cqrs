@@ -47,4 +47,3 @@ public class CommandEndpointBaseExceptionTests : IClassFixture<WebApplicationFac
         exception?.GetType().Name.Should().Be($"{errorType}ErrorException");
     }
 }
-
