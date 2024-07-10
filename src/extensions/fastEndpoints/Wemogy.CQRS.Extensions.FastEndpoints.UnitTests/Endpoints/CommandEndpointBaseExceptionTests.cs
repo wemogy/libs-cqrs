@@ -1,14 +1,11 @@
-using System.Collections;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Wemogy.Core.Errors;
 using Wemogy.Core.Errors.Enums;
 using Wemogy.Core.Errors.Exceptions;
 using Wemogy.CQRS.Commands.Abstractions;
 using Wemogy.CQRS.Extensions.FastEndpoints.TestWebApp.Commands.ThrowError;
 
 namespace Wemogy.CQRS.Extensions.FastEndpoints.UnitTests.Endpoints;
-
 
 public class CommandEndpointBaseExceptionTests : IClassFixture<WebApplicationFactory<Program>>
 {
