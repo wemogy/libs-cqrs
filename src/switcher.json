@@ -1,7 +1,7 @@
 {
   "solution": "Wemogy.CQRS.sln",
   "mappings": {
-    "Wemogy.Core": "../../libs/helpers/src/Wemogy.Core/Wemogy.Core.csproj",
+    "Wemogy.Core": "../../libs-core/src/Wemogy.Core/Wemogy.Core.csproj",
     "Wemogy.Infrastructure.Database.Core": "../../libs-infrastructure-database/src/core/Wemogy.Infrastructure.Database.Core/Wemogy.Infrastructure.Database.Core.csproj",
     "Wemogy.Infrastructure.Database.InMemory": "../../libs-infrastructure-database/src/in-memory/Wemogy.Infrastructure.Database.InMemory/Wemogy.Infrastructure.Database.InMemory.csproj"
   },
