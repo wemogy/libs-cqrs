@@ -1,9 +1,12 @@
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using RestSharp;
+using Wemogy.Core.Errors;
+using Wemogy.Core.Extensions;
+using Wemogy.Core.Json.ExceptionInformation;
 using Wemogy.CQRS.Abstractions;
 using Wemogy.CQRS.Common.ValueObjects;
 using Wemogy.CQRS.Extensions.FastEndpoints.Common;
+using Wemogy.CQRS.Extensions.FastEndpoints.Extensions;
 using Wemogy.CQRS.Queries.Abstractions;
 
 namespace Wemogy.CQRS.Extensions.FastEndpoints.RemoteQueryRunners;
@@ -26,9 +29,6 @@ public class HttpRemoteQueryRunner<TQuery, TResult> : IRemoteQueryRunner<TQuery,
 
     public async Task<TResult> QueryAsync(QueryRequest<TQuery> query, CancellationToken cancellationToken)
     {
-        // ToDo: Get configuration for the TCommand
-
-        // ToDo: Http call to the remote service
         var request = new RestRequest(_urlPath)
             .AddJsonBody(query);
 
@@ -36,7 +36,22 @@ public class HttpRemoteQueryRunner<TQuery, TResult> : IRemoteQueryRunner<TQuery,
 
         if (!response.IsSuccessful)
         {
-            throw new Exception($"Failed to run query {query.Query.GetType().Name}");
+            if (response.Headers == null || !response.Headers.HasJsonTypeHeader<ExceptionInformation>())
+            {
+                throw response.ErrorException ?? new Exception(response.Content);
+            }
+
+            var exceptionInformation = response.Content?.FromJson<ExceptionInformation>();
+
+            if (exceptionInformation == null)
+            {
+                throw Error.Unexpected(
+                    "ExceptionInformationMissing",
+                    "The response from the remote service did not contain any exception information.");
+            }
+
+            var exception = exceptionInformation.ToException();
+            throw exception;
         }
 
         if (response.Content == null)

@@ -7,6 +7,7 @@ public static class EndpointDefinitionExtensions
 {
     public static void AddErrorHandlerPostProcessor(this EndpointDefinition endpointDefinition)
     {
-        endpointDefinition.PostProcessor<ErrorHandlerPostProcessor>(Order.Before);
+        // Add the global ErrorHandlerPostProcessor after the endpoint post processors are executed
+        endpointDefinition.PostProcessor<ErrorHandlerPostProcessor>(Order.After);
     }
 }
