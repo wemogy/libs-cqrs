@@ -26,6 +26,7 @@ public class DependencyInjectionTests
         var helloAssemblyACommand = new PrintHelloAssemblyACommand();
         var helloAssemblyBCommand = new PrintHelloAssemblyBCommand();
         var trackUserLoginCommand = new TrackUserLoginCommand("test-user-id");
+        TrackUserLoginCommandHandler.ResetCallCount();
 
         // Act
         var trackUserLoginCommandException = await Record.ExceptionAsync(() => commands.RunAsync(trackUserLoginCommand));

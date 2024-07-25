@@ -12,4 +12,9 @@ public class TrackUserLoginCommandHandler : ICommandHandler<TrackUserLoginComman
         CallCount++;
         return Task.CompletedTask;
     }
+
+    public static void ResetCallCount()
+    {
+        CallCount = 0;
+    }
 }
