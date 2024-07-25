@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,8 +26,7 @@ public class DependencyInjectionTests
         var commands = serviceProvider.GetRequiredService<ICommands>();
         var helloAssemblyACommand = new PrintHelloAssemblyACommand();
         var helloAssemblyBCommand = new PrintHelloAssemblyBCommand();
-        var trackUserLoginCommand = new TrackUserLoginCommand("test-user-id");
-        TrackUserLoginCommandHandler.ResetCallCount();
+        var trackUserLoginCommand = new TrackUserLoginCommand(Guid.NewGuid().ToString());
 
         // Act
         var trackUserLoginCommandException = await Record.ExceptionAsync(() => commands.RunAsync(trackUserLoginCommand));
@@ -34,7 +34,7 @@ public class DependencyInjectionTests
         var helloAssemblyBCommandException = await Record.ExceptionAsync(() => commands.RunAsync(helloAssemblyBCommand));
 
         // Assert
-        TrackUserLoginCommandHandler.CallCount.Should().Be(1);
+        TrackUserLoginCommandHandler.ExecutedCount[trackUserLoginCommand.UserId].Should().Be(1);
         trackUserLoginCommandException.Should().BeNull();
         PrintHelloAssemblyACommandHandler.CallCount.Should().Be(1);
         helloAssemblyACommandException.Should().BeNull();
