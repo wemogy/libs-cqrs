@@ -7,14 +7,14 @@ public class TrackUserLoginCommandHandler : ICommandHandler<TrackUserLoginComman
 {
     public static int CallCount { get; private set; }
 
+    public static void ResetCallCount()
+    {
+        CallCount = 0;
+    }
+
     public Task HandleAsync(TrackUserLoginCommand command)
     {
         CallCount++;
         return Task.CompletedTask;
-    }
-
-    public static void ResetCallCount()
-    {
-        CallCount = 0;
     }
 }
