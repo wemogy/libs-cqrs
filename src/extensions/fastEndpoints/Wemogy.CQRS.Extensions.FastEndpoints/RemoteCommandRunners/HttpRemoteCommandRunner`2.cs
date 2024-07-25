@@ -1,4 +1,6 @@
 using System.Text.Json;
+using Polly;
+using Polly.Contrib.WaitAndRetry;
 using RestSharp;
 using Wemogy.Core.Errors;
 using Wemogy.Core.Extensions;
@@ -14,17 +16,25 @@ namespace Wemogy.CQRS.Extensions.FastEndpoints.RemoteCommandRunners;
 public class HttpRemoteCommandRunner<TCommand, TResult> : IRemoteCommandRunner<TCommand, TResult>
     where TCommand : ICommand<TResult>
 {
-    private readonly RestClient _restClient;
+    private readonly IRestClient _restClient;
 
     /// <summary>
     /// This is the sub-path of the client base path
     /// </summary>
     private readonly string _urlPath;
+    private readonly IAsyncPolicy<RestResponse> _retryPolicy;
 
-    public HttpRemoteCommandRunner(RestClient restClient, string urlPath)
+    public HttpRemoteCommandRunner(IRestClient restClient, string urlPath)
     {
         _restClient = restClient;
         _urlPath = urlPath;
+        var retryCount = 3;
+        var delay = Backoff.ExponentialBackoff(
+            TimeSpan.FromMilliseconds(100),
+            retryCount);
+        _retryPolicy = Policy
+            .HandleResult<RestResponse>(x => !x.IsSuccessful)
+            .WaitAndRetryAsync(delay);
     }
 
     public async Task<TResult> RunAsync(CommandRequest<TCommand> command)
@@ -33,7 +43,7 @@ public class HttpRemoteCommandRunner<TCommand, TResult> : IRemoteCommandRunner<T
         var request = new RestRequest(_urlPath)
             .AddJsonBody(command);
 
-        var response = await _restClient.PostAsync(request);
+        var response = await _retryPolicy.ExecuteAsync(() => _restClient.PostAsync(request));
 
         if (!response.IsSuccessful)
         {
