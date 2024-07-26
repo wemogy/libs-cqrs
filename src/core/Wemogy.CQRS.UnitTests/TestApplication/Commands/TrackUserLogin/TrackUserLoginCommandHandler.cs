@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Wemogy.CQRS.Commands.Abstractions;
 
@@ -5,11 +6,19 @@ namespace Wemogy.CQRS.UnitTests.TestApplication.Commands.TrackUserLogin;
 
 public class TrackUserLoginCommandHandler : ICommandHandler<TrackUserLoginCommand>
 {
-    public static int CallCount { get; private set; }
+    public static Dictionary<string, int> ExecutedCount { get; } = new ();
 
     public Task HandleAsync(TrackUserLoginCommand command)
     {
-        CallCount++;
+        if (ExecutedCount.TryGetValue(command.UserId, out var count))
+        {
+            ExecutedCount[command.UserId] = count + 1;
+        }
+        else
+        {
+            ExecutedCount[command.UserId] = 1;
+        }
+
         return Task.CompletedTask;
     }
 }

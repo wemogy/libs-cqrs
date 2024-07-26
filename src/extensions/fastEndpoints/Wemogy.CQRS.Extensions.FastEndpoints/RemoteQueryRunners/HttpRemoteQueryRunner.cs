@@ -1,4 +1,6 @@
 using System.Text.Json;
+using Polly;
+using Polly.Contrib.WaitAndRetry;
 using RestSharp;
 using Wemogy.Core.Errors;
 using Wemogy.Core.Extensions;
@@ -14,17 +16,25 @@ namespace Wemogy.CQRS.Extensions.FastEndpoints.RemoteQueryRunners;
 public class HttpRemoteQueryRunner<TQuery, TResult> : IRemoteQueryRunner<TQuery, TResult>
     where TQuery : IQuery<TResult>
 {
-    private readonly RestClient _restClient;
+    private readonly IRestClient _restClient;
 
     /// <summary>
     /// This is the sub-path of the client base path
     /// </summary>
     private readonly string _urlPath;
+    private readonly IAsyncPolicy<RestResponse> _retryPolicy;
 
-    public HttpRemoteQueryRunner(RestClient restClient, string urlPath)
+    public HttpRemoteQueryRunner(IRestClient restClient, string urlPath)
     {
         _restClient = restClient;
         _urlPath = urlPath;
+        var retryCount = 3;
+        var delay = Backoff.ExponentialBackoff(
+            TimeSpan.FromMilliseconds(100),
+            retryCount);
+        _retryPolicy = Policy
+            .HandleResult<RestResponse>(x => !x.IsSuccessful)
+            .WaitAndRetryAsync(delay);
     }
 
     public async Task<TResult> QueryAsync(QueryRequest<TQuery> query, CancellationToken cancellationToken)
@@ -32,7 +42,9 @@ public class HttpRemoteQueryRunner<TQuery, TResult> : IRemoteQueryRunner<TQuery,
         var request = new RestRequest(_urlPath)
             .AddJsonBody(query);
 
-        var response = await _restClient.PostAsync(request, cancellationToken: cancellationToken);
+        var response = await _retryPolicy.ExecuteAsync(
+            ct => _restClient.PostAsync(request, cancellationToken: ct),
+            cancellationToken);
 
         if (!response.IsSuccessful)
         {
