@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "Wemogy.CQRS.Extensions.FastEndpoints.UnitTests": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:59929;http://localhost:59930"
+    }
+  }
+}

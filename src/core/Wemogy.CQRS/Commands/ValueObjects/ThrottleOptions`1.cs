@@ -41,7 +41,7 @@ namespace Wemogy.CQRS.Commands.ValueObjects
         {
             var secondsOfTheDay = GetSecondsOfTheDay(dateTime); // 2
             var slotId = GetSlotId(secondsOfTheDay); // 1
-            var timespan = ThrottlePeriod * slotId; // 5
+            var timespan = TimeSpan.FromTicks(ThrottlePeriod.Ticks * slotId); // 5
             var timestampFromUpcomingSlot = dateTime.Add(ThrottlePeriod);
             var upcomingSlotId = GetSlotId(timestampFromUpcomingSlot);
 
