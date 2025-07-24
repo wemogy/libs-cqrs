@@ -21,7 +21,7 @@
 
     <ItemGroup>
       <PackageReference Include="FastEndpoints" Version="5.26.0" />
-      <PackageReference Include="RestSharp" Version="111.2.0" />
+      <PackageReference Include="RestSharp" Version="112.0.0" />
       <PackageReference Include="NuGetizer" Version="0.7.1">
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         <PrivateAssets>all</PrivateAssets>
