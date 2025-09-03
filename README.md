@@ -150,3 +150,14 @@ public class Demo
 ---
 
 Checkout the full [Documentation](https://libs-cqrs.docs.wemogy.com/) to get information about the available classes and extensions.
+
+---
+
+## Azure Service Bus Test-Setup
+
+- unit-testing-queue-duplicate-detection
+  - Enable duplicate detection: 20 seconds
+- unit-testing-queue-sessions
+  - Enable sessions
+- unit-testing-queue-1
+  - No checkboxes checked
