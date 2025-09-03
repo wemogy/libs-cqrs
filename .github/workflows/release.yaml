@@ -24,7 +24,10 @@ jobs:
       contents: "write"
       packages: "write"
     steps:
-      - uses: actions/checkout@v4
+      - name: Clone repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Get version for next release
         uses: wemogy/get-release-version-action@v4.3.2
@@ -52,17 +55,21 @@ jobs:
       # Update Documentation
       - name: Use Node.js
         uses: actions/setup-node@v3
+        if: false  # Temporarily disabled
         with:
           node-version: "16.x"
       - run: yarn install
+        if: false  # Temporarily disabled
         working-directory: docs/public
       - run: yarn build
+        if: false  # Temporarily disabled
         working-directory: docs/public
       - run: |
           git config --global user.name $GITHUB_ACTOR
           git config --global user.email $GITHUB_ACTOR@users.noreply.github.com
           yarn deploy --skip-build
         working-directory: docs/public
+        if: false  # Temporarily disabled
         env:
           GIT_USER: $GITHUB_ACTOR
           GIT_PASS: ${{ secrets.GITHUB_TOKEN }}

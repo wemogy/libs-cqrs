@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,7 +23,9 @@
 
   <ItemGroup>
     <ProjectReference Include="../Wemogy.CQRS/Wemogy.CQRS.csproj" />
-    <ProjectReference Include="..\Wemogy.CQRS.UnitTests.AssemblyA\Wemogy.CQRS.UnitTests.AssemblyA.csproj" />
-    <ProjectReference Include="..\Wemogy.CQRS.UnitTests.AssemblyB\Wemogy.CQRS.UnitTests.AssemblyB.csproj" />
+    <ProjectReference
+      Include="..\Wemogy.CQRS.UnitTests.AssemblyA\Wemogy.CQRS.UnitTests.AssemblyA.csproj" />
+    <ProjectReference
+      Include="..\Wemogy.CQRS.UnitTests.AssemblyB\Wemogy.CQRS.UnitTests.AssemblyB.csproj" />
   </ItemGroup>
 </Project>

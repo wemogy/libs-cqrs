@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,7 +22,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../Wemogy.CQRS.Extensions.AzureServiceBus/Wemogy.CQRS.Extensions.AzureServiceBus.csproj" />
+    <ProjectReference
+      Include="../Wemogy.CQRS.Extensions.AzureServiceBus/Wemogy.CQRS.Extensions.AzureServiceBus.csproj" />
     <ProjectReference Include="..\..\..\core\Wemogy.CQRS.UnitTests\Wemogy.CQRS.UnitTests.csproj" />
   </ItemGroup>
 
