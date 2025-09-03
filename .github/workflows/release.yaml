@@ -79,7 +79,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           name: Version ${{ github.event.inputs.version || steps.release-version.outputs.version }}
-          tag_name: ${{ steps.release-version.outputs.next-version-name }}
+          tag_name: ${{ github.event.inputs.version && format('v{0}', github.event.inputs.version) || steps.release-version.outputs.version-name }}
           prerelease: ${{ github.event.inputs.pre-release || false }}
           generate_release_notes: true
         env:
