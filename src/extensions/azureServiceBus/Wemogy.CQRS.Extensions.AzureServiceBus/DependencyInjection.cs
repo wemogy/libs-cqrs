@@ -1,6 +1,7 @@
 using Azure.Core;
 using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Wemogy.CQRS.Commands.Abstractions;
 using Wemogy.CQRS.Extensions.AzureServiceBus.Services;
 using Wemogy.CQRS.Extensions.AzureServiceBus.Setup;
@@ -11,7 +12,7 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus
     public static class DependencyInjection
     {
         /// <summary>
-        /// Call this method to use Azure Service Bus for scheduled commands
+        /// Try to register a <see cref="ServiceBusClient"/> using a connection string for use with scheduled commands in the CQRS setup environment.
         /// </summary>
         /// <param name="setupEnvironment">The CQRS setup environment to active Azure Service Bus in</param>
         /// <param name="azureServiceBusConnectionString">The connection string to the AzureServiceBus</param>
@@ -19,28 +20,14 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus
             this CQRSSetupEnvironment setupEnvironment,
             string azureServiceBusConnectionString)
         {
-            var serviceBusClient = new ServiceBusClient(azureServiceBusConnectionString);
+            var client = new ServiceBusClient(azureServiceBusConnectionString);
+            setupEnvironment.ServiceCollection.TryAddKeyedSingleton(
+                client.FullyQualifiedNamespace,
+                new AzureServiceBusSetupEnvironment(client, setupEnvironment.ServiceCollection));
+
             var azureServiceBusSetupEnvironment =
-                new AzureServiceBusSetupEnvironment(serviceBusClient, setupEnvironment.ServiceCollection);
-
-            setupEnvironment.ServiceCollection.AddSingleton<IScheduledCommandService, AzureServiceBusScheduledCommandService>(
-                _ => new AzureServiceBusScheduledCommandService(serviceBusClient, azureServiceBusSetupEnvironment));
-
-            return azureServiceBusSetupEnvironment;
-        }
-
-        /// <summary>
-        /// Registers an existing <see cref="ServiceBusClient"/> for use with scheduled commands in the CQRS setup environment.
-        /// </summary>
-        /// <param name="setupEnvironment">The CQRS setup environment to activate Azure Service Bus in.</param>
-        /// <param name="client">The existing <see cref="ServiceBusClient"/> instance.</param>
-        /// <returns>An <see cref="AzureServiceBusSetupEnvironment"/> configured with the provided client.</returns>
-        public static AzureServiceBusSetupEnvironment AddAzureServiceBusWithClient(
-            this CQRSSetupEnvironment setupEnvironment,
-            ServiceBusClient client)
-        {
-            var azureServiceBusSetupEnvironment =
-                new AzureServiceBusSetupEnvironment(client, setupEnvironment.ServiceCollection);
+                setupEnvironment
+                    .ServiceCollection.BuildServiceProvider().GetRequiredKeyedService<AzureServiceBusSetupEnvironment>(client.FullyQualifiedNamespace);
 
             setupEnvironment.ServiceCollection.AddSingleton<IScheduledCommandService, AzureServiceBusScheduledCommandService>(
                 _ => new AzureServiceBusScheduledCommandService(client, azureServiceBusSetupEnvironment));
@@ -49,7 +36,31 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus
         }
 
         /// <summary>
-        /// Registers a <see cref="ServiceBusClient"/> using a fully qualified namespace and <see cref="TokenCredential"/>
+        /// Try to register an existing <see cref="ServiceBusClient"/> for use with scheduled commands in the CQRS setup environment.
+        /// </summary>
+        /// <param name="setupEnvironment">The CQRS setup environment to activate Azure Service Bus in.</param>
+        /// <param name="client">The existing <see cref="ServiceBusClient"/> instance.</param>
+        /// <returns>An <see cref="AzureServiceBusSetupEnvironment"/> configured with the provided client.</returns>
+        public static AzureServiceBusSetupEnvironment AddAzureServiceBusWithClient(
+            this CQRSSetupEnvironment setupEnvironment,
+            ServiceBusClient client)
+        {
+            setupEnvironment.ServiceCollection.TryAddKeyedSingleton(
+                client.FullyQualifiedNamespace,
+                new AzureServiceBusSetupEnvironment(client, setupEnvironment.ServiceCollection));
+
+            var azureServiceBusSetupEnvironment =
+                setupEnvironment
+                    .ServiceCollection.BuildServiceProvider().GetRequiredKeyedService<AzureServiceBusSetupEnvironment>(client.FullyQualifiedNamespace);
+
+            setupEnvironment.ServiceCollection.AddSingleton<IScheduledCommandService, AzureServiceBusScheduledCommandService>(
+                _ => new AzureServiceBusScheduledCommandService(client, azureServiceBusSetupEnvironment));
+
+            return azureServiceBusSetupEnvironment;
+        }
+
+        /// <summary>
+        /// Try to register a <see cref="ServiceBusClient"/> using a fully qualified namespace and <see cref="TokenCredential"/>
         /// for use with scheduled commands in the CQRS setup environment.
         /// </summary>
         /// <param name="setupEnvironment">The CQRS setup environment to activate Azure Service Bus in.</param>
@@ -62,10 +73,16 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus
             TokenCredential azureServiceBusCredential)
         {
             var client = new ServiceBusClient(fullyQualifiedNamespace, azureServiceBusCredential);
-            var azureServiceBusSetupEnvironment =
-                new AzureServiceBusSetupEnvironment(client, setupEnvironment.ServiceCollection);
 
-            setupEnvironment.ServiceCollection.AddSingleton<IScheduledCommandService, AzureServiceBusScheduledCommandService>(
+            setupEnvironment.ServiceCollection.TryAddKeyedSingleton(
+                fullyQualifiedNamespace,
+                new AzureServiceBusSetupEnvironment(client, setupEnvironment.ServiceCollection));
+
+            var azureServiceBusSetupEnvironment =
+                setupEnvironment
+                    .ServiceCollection.BuildServiceProvider().GetRequiredKeyedService<AzureServiceBusSetupEnvironment>(fullyQualifiedNamespace);
+
+            setupEnvironment.ServiceCollection.TryAddSingleton<IScheduledCommandService>(
                 _ => new AzureServiceBusScheduledCommandService(client, azureServiceBusSetupEnvironment));
 
             return azureServiceBusSetupEnvironment;
