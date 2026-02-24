@@ -36,7 +36,7 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
             _serviceBusProcessor.ProcessMessageAsync += HandleMessageAsync;
             _serviceBusProcessor.ProcessErrorAsync += (args) =>
             {
-                Console.WriteLine(args.Exception);
+                Console.WriteLine("ProcessErrorAsync: " + args.Exception);
                 return Task.CompletedTask;
             };
             _handleMessageActivityName = $"HandleMessageOf{typeof(TCommand).Name}";
@@ -90,6 +90,7 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
             using var activity =
                 Observability.DefaultActivities.StartActivity($"Stopping {nameof(AzureServiceBusCommandSessionProcessor<TCommand>)}");
             await _serviceBusProcessor.StopProcessingAsync(cancellationToken);
+            await _serviceBusProcessor.DisposeAsync();
             _isStarted = false;
         }
     }
