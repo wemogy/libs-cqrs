@@ -16,11 +16,13 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus
         /// </summary>
         /// <param name="setupEnvironment">The CQRS setup environment to active Azure Service Bus in</param>
         /// <param name="azureServiceBusConnectionString">The connection string to the AzureServiceBus</param>
+        /// <param name="serviceBusClientOptions">Optional <see cref="ServiceBusClientOptions"/> for configuring the <see cref="ServiceBusClient"/></param>
         public static AzureServiceBusSetupEnvironment AddAzureServiceBus(
             this CQRSSetupEnvironment setupEnvironment,
-            string azureServiceBusConnectionString)
+            string azureServiceBusConnectionString,
+            ServiceBusClientOptions? serviceBusClientOptions = null)
         {
-            var client = new ServiceBusClient(azureServiceBusConnectionString);
+            var client = new ServiceBusClient(azureServiceBusConnectionString, serviceBusClientOptions);
             setupEnvironment.ServiceCollection.TryAddKeyedSingleton(
                 client.FullyQualifiedNamespace,
                 new AzureServiceBusSetupEnvironment(client, setupEnvironment.ServiceCollection));
@@ -66,13 +68,15 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus
         /// <param name="setupEnvironment">The CQRS setup environment to activate Azure Service Bus in.</param>
         /// <param name="fullyQualifiedNamespace">The fully qualified namespace of the Azure Service Bus.</param>
         /// <param name="azureServiceBusCredential">The <see cref="TokenCredential"/> for authentication.</param>
+        /// <param name="serviceBusClientOptions">Optional <see cref="ServiceBusClientOptions"/> for configuring the <see cref="ServiceBusClient"/></param>
         /// <returns>An <see cref="AzureServiceBusSetupEnvironment"/> configured with the created client.</returns>
         public static AzureServiceBusSetupEnvironment AddAzureServiceBusWithFullNamespace(
             this CQRSSetupEnvironment setupEnvironment,
             string fullyQualifiedNamespace,
-            TokenCredential azureServiceBusCredential)
+            TokenCredential azureServiceBusCredential,
+            ServiceBusClientOptions? serviceBusClientOptions = null)
         {
-            var client = new ServiceBusClient(fullyQualifiedNamespace, azureServiceBusCredential);
+            var client = new ServiceBusClient(fullyQualifiedNamespace, azureServiceBusCredential, serviceBusClientOptions);
 
             setupEnvironment.ServiceCollection.TryAddKeyedSingleton(
                 fullyQualifiedNamespace,
