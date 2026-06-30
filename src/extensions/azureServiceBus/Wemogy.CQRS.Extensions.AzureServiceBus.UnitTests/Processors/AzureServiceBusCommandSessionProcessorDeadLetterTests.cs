@@ -27,7 +27,7 @@ public class AzureServiceBusCommandSessionProcessorDeadLetterTests
     public AzureServiceBusCommandSessionProcessorDeadLetterTests()
     {
         var configuration = ConfigurationFactory.BuildConfiguration("Development");
-        var connectionString = configuration["AzureServiceBusConnectionString"]!;
+        var connectionString = configuration["AzureServiceBusConnectionString"] !;
         var serviceCollection = new ServiceCollection();
 
         serviceCollection
