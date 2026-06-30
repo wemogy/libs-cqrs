@@ -19,6 +19,7 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
     {
         private readonly ServiceBusSessionProcessor _serviceBusSessionProcessor;
         private readonly IServiceCollection _serviceCollection;
+        private readonly int _maxDeliveryCount;
         private bool _isStarted;
 
         /// <summary>
@@ -30,10 +31,12 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
 
         public AzureServiceBusCommandSessionProcessor(
             ServiceBusSessionProcessor serviceBusSessionProcessor,
-            IServiceCollection serviceCollection)
+            IServiceCollection serviceCollection,
+            int maxDeliveryCount = 10)
         {
             _serviceBusSessionProcessor = serviceBusSessionProcessor;
             _serviceCollection = serviceCollection;
+            _maxDeliveryCount = maxDeliveryCount;
             _serviceBusSessionProcessor.ProcessMessageAsync += HandleMessageAsync;
             _serviceBusSessionProcessor.ProcessErrorAsync += (args) =>
             {
@@ -75,6 +78,17 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
             catch (Exception e)
             {
                 activity?.RecordException(e);
+
+                if (arg.Message.DeliveryCount >= _maxDeliveryCount)
+                {
+                    await arg.DeadLetterMessageAsync(
+                        arg.Message,
+                        deadLetterReason: e.GetType().Name,
+                        deadLetterErrorDescription: e.Message,
+                        cancellationToken: arg.CancellationToken);
+                    return;
+                }
+
                 throw;
             }
         }
