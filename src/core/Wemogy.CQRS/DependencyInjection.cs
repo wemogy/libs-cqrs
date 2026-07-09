@@ -21,7 +21,6 @@ using Wemogy.CQRS.Queries.Registries;
 using Wemogy.CQRS.Queries.Runners;
 using Wemogy.CQRS.Resolvers;
 using Wemogy.CQRS.Setup;
-using Exception = System.Exception;
 
 namespace Wemogy.CQRS;
 
@@ -78,6 +77,10 @@ public static class DependencyInjection
         var commandTypes = assemblies.GetClassTypesWhichImplementInterface(typeof(ICommand<>));
         commandTypes.AddRange(assemblies.GetClassTypesWhichImplementInterface(typeof(ICommand)));
 
+        // Register all command runners as open generic types. The DI container closes them on
+        // demand, so they only need to be registered once instead of once per command type.
+        serviceCollection.AddCommandRunners();
+
         foreach (var commandType in commandTypes)
         {
             if (!commandType.InheritsOrImplements(typeof(ICommand<>), out Type? genericCommandType) || genericCommandType == null)
@@ -92,16 +95,15 @@ public static class DependencyInjection
 
             var resultType = genericCommandType.GenericTypeArguments.ElementAtOrDefault(0);
 
-            if (resultType == null)
-            {
-                // command runners
-                serviceCollection.AddCommandRunners(commandType);
-            }
-            else
-            {
-                // command runners
-                serviceCollection.AddCommandRunners(commandType, resultType);
-            }
+            // Map IScheduledCommandRunner<TCommand> to the matching concrete runner. This cannot be
+            // expressed as a single open generic registration because the void variant has one type
+            // argument while the result variant has two.
+            var scheduledCommandRunnerType = resultType == null
+                ? typeof(VoidScheduledCommandRunner<>).MakeGenericType(commandType)
+                : typeof(ScheduledCommandRunner<,>).MakeGenericType(commandType, resultType);
+            serviceCollection.AddScoped(
+                typeof(IScheduledCommandRunner<>).MakeGenericType(commandType),
+                scheduledCommandRunnerType);
         }
 
         // PreProcessing
@@ -125,21 +127,9 @@ public static class DependencyInjection
 
     private static void AddQueries(this IServiceCollection serviceCollection, List<Assembly> assemblies)
     {
-        var queryTypes = assemblies.GetClassTypesWhichImplementInterface(typeof(IQuery<>));
-
-        foreach (var queryType in queryTypes)
-        {
-            if (!queryType.InheritsOrImplements(typeof(IQuery<>), out Type? genericQueryType) || genericQueryType == null)
-            {
-                throw new Exception("Query type must inherit from IQuery<>");
-            }
-
-            var resultType = genericQueryType.GenericTypeArguments[0];
-
-            // query runner
-            var queryRunnerType = typeof(QueryRunner<,>).MakeGenericType(queryType, resultType);
-            serviceCollection.AddScoped(queryRunnerType);
-        }
+        // Register the query runner as an open generic type. The DI container closes it on demand,
+        // so it only needs to be registered once instead of once per query type.
+        serviceCollection.TryAddScoped(typeof(QueryRunner<,>));
 
         // IQueryValidator implementations
         serviceCollection.AddImplementationsOfGenericInterfaceScoped(typeof(IQueryValidator<>), assemblies);
@@ -157,23 +147,26 @@ public static class DependencyInjection
         serviceCollection.TryAddSingleton<QueryRunnerRegistry>();
     }
 
-    private static void AddImplementation(
-        this IServiceCollection serviceCollection,
-        Type genericImplementationType,
-        Type commandType,
-        Type resultType)
+    private static void AddCommandRunners(this IServiceCollection serviceCollection)
     {
-        var implementationType = genericImplementationType.MakeGenericType(commandType, resultType);
-        serviceCollection.AddScoped(implementationType);
-    }
+        // command runners
+        serviceCollection.TryAddScoped(typeof(VoidCommandRunner<>));
+        serviceCollection.TryAddScoped(typeof(CommandRunner<,>));
 
-    private static void AddImplementation(
-        this IServiceCollection serviceCollection,
-        Type genericImplementationType,
-        Type commandType)
-    {
-        var implementationType = genericImplementationType.MakeGenericType(commandType);
-        serviceCollection.AddScoped(implementationType);
+        // scheduled command runners
+        serviceCollection.TryAddScoped(typeof(VoidScheduledCommandRunner<>));
+        serviceCollection.TryAddScoped(typeof(ScheduledCommandRunner<,>));
+
+        // recurring command runners
+        serviceCollection.TryAddScoped(typeof(VoidRecurringCommandRunner<>));
+        serviceCollection.TryAddScoped(typeof(RecurringCommandRunner<,>));
+
+        // PreProcessingRunner
+        serviceCollection.TryAddScoped(typeof(PreProcessingRunner<>));
+
+        // PostProcessingRunner
+        serviceCollection.TryAddScoped(typeof(PostProcessingRunner<,>));
+        serviceCollection.TryAddScoped(typeof(VoidPostProcessingRunner<>));
     }
 
     private static void AddPreProcessingServices(
@@ -203,65 +196,6 @@ public static class DependencyInjection
         serviceCollection.AddImplementationsOfGenericInterfaceScoped(
             typeof(ICommandPostProcessor<,>),
             assemblies);
-    }
-
-    private static void AddCommandRunners(
-        this IServiceCollection serviceCollection,
-        Type commandType,
-        Type resultType)
-    {
-        // command runner
-        serviceCollection.TryAddScopedGenericType(
-            typeof(CommandRunner<,>),
-            commandType,
-            resultType);
-
-        // scheduled command runner
-        var scheduledCommandRunnerType = typeof(ScheduledCommandRunner<,>).MakeGenericType(commandType, resultType);
-        serviceCollection.AddScoped(scheduledCommandRunnerType);
-        serviceCollection.AddScoped(
-            typeof(IScheduledCommandRunner<>).MakeGenericType(commandType),
-            scheduledCommandRunnerType);
-
-        // recurring command runner
-        serviceCollection.TryAddScopedGenericType(
-            typeof(RecurringCommandRunner<,>),
-            commandType,
-            resultType);
-
-        // PreProcessingRunner
-        serviceCollection.AddImplementation(typeof(PreProcessingRunner<>), commandType);
-
-        // PostProcessingRunner
-        serviceCollection.AddImplementation(typeof(PostProcessingRunner<,>), commandType, resultType);
-    }
-
-    private static void AddCommandRunners(
-        this IServiceCollection serviceCollection,
-        Type commandType)
-    {
-        // command runner
-        serviceCollection.TryAddScopedGenericType(
-            typeof(VoidCommandRunner<>),
-            commandType);
-
-        // scheduled command runner
-        var scheduledCommandRunnerType = typeof(VoidScheduledCommandRunner<>).MakeGenericType(commandType);
-        serviceCollection.AddScoped(scheduledCommandRunnerType);
-        serviceCollection.AddScoped(
-            typeof(IScheduledCommandRunner<>).MakeGenericType(commandType),
-            scheduledCommandRunnerType);
-
-        // recurring command runner
-        serviceCollection.TryAddScopedGenericType(
-            typeof(VoidRecurringCommandRunner<>),
-            commandType);
-
-        // PreProcessingRunner
-        serviceCollection.AddImplementation(typeof(PreProcessingRunner<>), commandType);
-
-        // PostProcessingRunner
-        serviceCollection.AddImplementation(typeof(VoidPostProcessingRunner<>), commandType);
     }
 
     /// <summary>
