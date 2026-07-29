@@ -31,7 +31,8 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Setup
         /// </summary>
         public AzureServiceBusSetupEnvironment AddDelayedProcessor<TCommand>(
             int maxConcurrentCalls = 1,
-            Action<ServiceBusProcessorOptions>? configureServiceBusProcessorOptions = null)
+            Action<ServiceBusProcessorOptions>? configureServiceBusProcessorOptions = null,
+            int maxDeliveryCount = 10)
             where TCommand : ICommandBase
         {
             var queueName = GetQueueName<TCommand>();
@@ -46,7 +47,7 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Setup
                 configureServiceBusProcessorOptions?.Invoke(serviceBusProcessorOptions);
 
                 var serviceBusProcessor = _serviceBusClient.CreateProcessor(queueName, serviceBusProcessorOptions);
-                var processor = new AzureServiceBusCommandProcessor<TCommand>(serviceBusProcessor, ServiceCollection);
+                var processor = new AzureServiceBusCommandProcessor<TCommand>(serviceBusProcessor, ServiceCollection, maxDeliveryCount);
 
                 return processor;
             });
@@ -62,10 +63,12 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Setup
         /// <param name="maxConcurrentSessions">The maximum number of concurrent sessions (default 1)</param>
         /// <param name="maxConcurrentCallsPerSession">The maximum number of concurrent calls per session (default 1)</param>
         /// <param name="configureSessionProcessorOptions">Optional custom configuration of the ServiceBusSessionProcessorOptions</param>
+        /// <param name="maxDeliveryCount">Must match the queue's MaxDeliveryCount setting; used to dead-letter with the actual exception on the final attempt (default 10)</param>
         public AzureServiceBusSetupEnvironment AddDelayedSessionProcessor<TCommand>(
             int maxConcurrentSessions = 1,
             int maxConcurrentCallsPerSession = 1,
-            Action<ServiceBusSessionProcessorOptions>? configureSessionProcessorOptions = null)
+            Action<ServiceBusSessionProcessorOptions>? configureSessionProcessorOptions = null,
+            int maxDeliveryCount = 10)
             where TCommand : ICommandBase
         {
             var queueName = GetQueueName<TCommand>();
@@ -94,7 +97,8 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Setup
                     serviceBusSessionProcessorOptions);
                 var processor = new AzureServiceBusCommandSessionProcessor<TCommand>(
                     serviceBusSessionProcessor,
-                    ServiceCollection);
+                    ServiceCollection,
+                    maxDeliveryCount);
 
                 return processor;
             });

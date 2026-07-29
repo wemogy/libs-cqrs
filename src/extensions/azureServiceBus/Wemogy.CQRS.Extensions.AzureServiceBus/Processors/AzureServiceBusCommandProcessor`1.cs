@@ -20,6 +20,7 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
         private readonly ServiceBusProcessor _serviceBusProcessor;
         private readonly IServiceCollection _serviceCollection;
         private readonly string _handleMessageActivityName;
+        private readonly int _maxDeliveryCount;
         private bool _isStarted;
 
         /// <summary>
@@ -29,10 +30,20 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
 
         public AzureServiceBusCommandProcessor(
             ServiceBusProcessor serviceBusProcessor,
-            IServiceCollection serviceCollection)
+            IServiceCollection serviceCollection,
+            int maxDeliveryCount = 10)
         {
+            if (maxDeliveryCount <= 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(maxDeliveryCount),
+                    maxDeliveryCount,
+                    "maxDeliveryCount must be greater than 0.");
+            }
+
             _serviceBusProcessor = serviceBusProcessor;
             _serviceCollection = serviceCollection;
+            _maxDeliveryCount = maxDeliveryCount;
             _serviceBusProcessor.ProcessMessageAsync += HandleMessageAsync;
             _serviceBusProcessor.ProcessErrorAsync += (args) =>
             {
@@ -73,6 +84,17 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
             catch (Exception e)
             {
                 activity?.RecordException(e);
+
+                if (arg.Message.DeliveryCount >= _maxDeliveryCount)
+                {
+                    await arg.DeadLetterMessageAsync(
+                        arg.Message,
+                        deadLetterReason: e.GetType().Name,
+                        deadLetterErrorDescription: e.Message,
+                        cancellationToken: arg.CancellationToken);
+                    return;
+                }
+
                 throw;
             }
         }

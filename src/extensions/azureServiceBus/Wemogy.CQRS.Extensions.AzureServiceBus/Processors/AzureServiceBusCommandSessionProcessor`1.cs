@@ -19,6 +19,7 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
     {
         private readonly ServiceBusSessionProcessor _serviceBusSessionProcessor;
         private readonly IServiceCollection _serviceCollection;
+        private readonly int _maxDeliveryCount;
         private bool _isStarted;
 
         /// <summary>
@@ -30,10 +31,20 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
 
         public AzureServiceBusCommandSessionProcessor(
             ServiceBusSessionProcessor serviceBusSessionProcessor,
-            IServiceCollection serviceCollection)
+            IServiceCollection serviceCollection,
+            int maxDeliveryCount = 10)
         {
+            if (maxDeliveryCount <= 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(maxDeliveryCount),
+                    maxDeliveryCount,
+                    "maxDeliveryCount must be greater than 0.");
+            }
+
             _serviceBusSessionProcessor = serviceBusSessionProcessor;
             _serviceCollection = serviceCollection;
+            _maxDeliveryCount = maxDeliveryCount;
             _serviceBusSessionProcessor.ProcessMessageAsync += HandleMessageAsync;
             _serviceBusSessionProcessor.ProcessErrorAsync += (args) =>
             {
@@ -64,7 +75,7 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
             services.AddCommandQueryDependencies(scheduledCommand.Dependencies);
 
             var scopeFactory = services.BuildServiceProvider().GetRequiredService<IServiceScopeFactory>();
-            var scope = scopeFactory.CreateScope();
+            using var scope = scopeFactory.CreateScope();
 
             try
             {
@@ -75,6 +86,17 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
             catch (Exception e)
             {
                 activity?.RecordException(e);
+
+                if (arg.Message.DeliveryCount >= _maxDeliveryCount)
+                {
+                    await arg.DeadLetterMessageAsync(
+                        arg.Message,
+                        deadLetterReason: e.GetType().Name,
+                        deadLetterErrorDescription: e.Message,
+                        cancellationToken: arg.CancellationToken);
+                    return;
+                }
+
                 throw;
             }
         }
