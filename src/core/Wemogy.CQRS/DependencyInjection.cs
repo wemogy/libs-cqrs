@@ -76,7 +76,7 @@ public static class DependencyInjection
     {
         var commandTypes = assemblies.GetClassTypesWhichImplementInterface(typeof(ICommand<>));
         commandTypes.AddRange(assemblies.GetClassTypesWhichImplementInterface(typeof(ICommand)));
-
+        commandTypes = commandTypes.Distinct().ToList();
         // Register all command runners as open generic types. The DI container closes them on
         // demand, so they only need to be registered once instead of once per command type.
         serviceCollection.AddCommandRunners();
