@@ -34,6 +34,14 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
             IServiceCollection serviceCollection,
             int maxDeliveryCount = 10)
         {
+            if (maxDeliveryCount <= 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(maxDeliveryCount),
+                    maxDeliveryCount,
+                    "maxDeliveryCount must be greater than 0.");
+            }
+
             _serviceBusSessionProcessor = serviceBusSessionProcessor;
             _serviceCollection = serviceCollection;
             _maxDeliveryCount = maxDeliveryCount;
@@ -67,7 +75,7 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
             services.AddCommandQueryDependencies(scheduledCommand.Dependencies);
 
             var scopeFactory = services.BuildServiceProvider().GetRequiredService<IServiceScopeFactory>();
-            var scope = scopeFactory.CreateScope();
+            using var scope = scopeFactory.CreateScope();
 
             try
             {
