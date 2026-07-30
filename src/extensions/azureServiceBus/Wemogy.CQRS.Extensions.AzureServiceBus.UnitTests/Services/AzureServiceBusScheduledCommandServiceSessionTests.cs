@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Azure.Messaging.ServiceBus;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -17,20 +18,23 @@ using Xunit;
 namespace Wemogy.CQRS.Extensions.AzureServiceBus.UnitTests.Services;
 
 [Collection("AzureServiceBus")]
-public class AzureServiceBusScheduledCommandServiceSessionTests
+public class AzureServiceBusScheduledCommandServiceSessionTests : IAsyncLifetime
 {
     private readonly ICommands _commands;
     private readonly IServiceProvider _serviceProvider;
+    private readonly ServiceBusClient _serviceBusClient;
+
     public AzureServiceBusScheduledCommandServiceSessionTests()
     {
         var configuration = ConfigurationFactory.BuildConfiguration("Development");
         var serviceCollection = new ServiceCollection();
+        _serviceBusClient = new ServiceBusClient(configuration["AzureServiceBusConnectionString"] !);
 
         serviceCollection
             .AddTestApplication()
 
             // tell CQRS to use Azure Service Bus for delayed processing
-            .AddAzureServiceBus(configuration["AzureServiceBusConnectionString"] !)
+            .AddAzureServiceBusWithClient(_serviceBusClient)
 
             // Configure QueueName, Message Session ID and etc.
             .ConfigureDelayedProcessing<PrintSessionIdCommand>(builder =>
@@ -43,6 +47,13 @@ public class AzureServiceBusScheduledCommandServiceSessionTests
 
         _serviceProvider = serviceCollection.BuildServiceProvider();
         _commands = _serviceProvider.GetRequiredService<ICommands>();
+    }
+
+    public Task InitializeAsync() => Task.CompletedTask;
+
+    public async Task DisposeAsync()
+    {
+        await _serviceBusClient.DisposeAsync();
     }
 
     [Fact]
