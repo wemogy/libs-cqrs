@@ -36,15 +36,15 @@ public class QueryRunnerRegistry : RegistryBase<Type, TypeMethodRegistryEntry>
         CancellationToken cancellationToken)
     {
         var queryRunner = serviceProvider.GetRequiredService(queryRunnerEntry.Type);
-        dynamic res = queryRunnerEntry.Method.Invoke(queryRunner, new object[] { query, cancellationToken });
-        return res;
+        dynamic? res = queryRunnerEntry.Method.Invoke(queryRunner, new object[] { query, cancellationToken });
+        return res!;
     }
 
     protected override TypeMethodRegistryEntry InitializeEntry(Type queryType)
     {
         queryType.InheritsOrImplements(typeof(IQuery<>), out var resultType);
         var queryRunnerType =
-            typeof(QueryRunner<,>).MakeGenericType(queryType, resultType?.GenericTypeArguments[0]);
+            typeof(QueryRunner<,>).MakeGenericType(queryType, resultType!.GenericTypeArguments[0]);
         var runAsyncMethod = queryRunnerType.GetMethods().First(x => x.Name == "QueryAsync");
         return new TypeMethodRegistryEntry(queryRunnerType, runAsyncMethod);
     }

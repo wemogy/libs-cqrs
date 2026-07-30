@@ -69,6 +69,6 @@ public class CommandEndpointBase<TCommand, TResult> : Endpoint<CommandRequest<TC
 
         var result = await commands.RunAsync(req.Command);
 
-        await SendOkAsync(result, ct);
+        await HttpContext.Response.SendOkAsync(result, cancellation: ct);
     }
 }
