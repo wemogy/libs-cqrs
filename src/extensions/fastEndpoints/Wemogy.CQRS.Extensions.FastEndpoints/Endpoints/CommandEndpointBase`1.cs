@@ -70,6 +70,6 @@ public class CommandEndpointBase<TCommand> : Endpoint<CommandRequest<TCommand>>
 
         await commands.RunAsync(req.Command);
 
-        await SendOkAsync(ct);
+        await HttpContext.Response.SendOkAsync(ct);
     }
 }

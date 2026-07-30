@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using OpenTelemetry.Trace;
 
 namespace Wemogy.CQRS.Extensions.AzureServiceBus.Health
 {
@@ -38,7 +38,7 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Health
                 var receiver = ServiceBusReceivers.GetOrAdd($"{nameof(AzureServiceBusHealthCheck)}_{_queueName}", client.CreateReceiver(_queueName));
                 using var peekMessageActivity = Observability.DefaultActivities.StartActivity("AzureServiceBusHealthCheck.PeekMessage");
                 _ = await receiver.PeekMessageAsync(cancellationToken: cancellationToken);
-                peekMessageActivity?.SetStatus(Status.Ok);
+                peekMessageActivity?.SetStatus(ActivityStatusCode.Ok);
                 peekMessageActivity?.Stop();
                 return HealthCheckResult.Healthy();
             }
@@ -52,13 +52,13 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Health
                 }
 
                 // Record the exception in the activity
-                activity?.RecordException(ex);
+                activity?.AddException(ex);
 
                 return new HealthCheckResult(context.Registration.FailureStatus, exception: ex);
             }
             catch (Exception ex)
             {
-                activity?.RecordException(ex);
+                activity?.AddException(ex);
                 return new HealthCheckResult(context.Registration.FailureStatus, exception: ex);
             }
         }

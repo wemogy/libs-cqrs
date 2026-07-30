@@ -48,8 +48,8 @@ public class RecurringCommandRunnerRegistry : RegistryBase<Type, TypeMethodRegis
             command,
             cronExpression
         };
-        dynamic res = recurringCommandRunnerEntry.Method.Invoke(recurringCommandRunner, parameters);
-        return res;
+        dynamic? res = recurringCommandRunnerEntry.Method.Invoke(recurringCommandRunner, parameters);
+        return res!;
     }
 
     protected override TypeMethodRegistryEntry InitializeEntry(Type commandType)
@@ -57,7 +57,7 @@ public class RecurringCommandRunnerRegistry : RegistryBase<Type, TypeMethodRegis
         if (commandType.InheritsOrImplements(typeof(ICommand<>), out var resultType))
         {
             var recurringCommandRunnerType =
-                typeof(RecurringCommandRunner<,>).MakeGenericType(commandType, resultType?.GenericTypeArguments[0]);
+                typeof(RecurringCommandRunner<,>).MakeGenericType(commandType, resultType!.GenericTypeArguments[0]);
             var runAsyncMethod = recurringCommandRunnerType.GetMethods().First(x => x.Name == "ScheduleAsync");
             return new TypeMethodRegistryEntry(recurringCommandRunnerType, runAsyncMethod);
         }

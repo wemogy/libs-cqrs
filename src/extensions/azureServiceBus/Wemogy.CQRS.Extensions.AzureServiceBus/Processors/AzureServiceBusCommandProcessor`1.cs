@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using OpenTelemetry.Trace;
 using Wemogy.Core.Errors;
 using Wemogy.Core.Json;
 using Wemogy.CQRS.Commands.Abstractions;
@@ -72,7 +71,7 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
             }
             catch (Exception e)
             {
-                activity?.RecordException(e);
+                activity?.AddException(e);
                 throw;
             }
         }
