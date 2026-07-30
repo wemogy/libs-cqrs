@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 namespace Wemogy.CQRS.Common.Abstractions;
 
 public abstract class RegistryBase<TKey, TValue>
+    where TKey : notnull
 {
     private readonly ConcurrentDictionary<TKey, TValue> _entriesCache = new ConcurrentDictionary<TKey, TValue>();
 

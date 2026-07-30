@@ -16,6 +16,31 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      # Start the Azure Service Bus emulator (plus its SQL Server dependency)
+      # so the tests can run against a local Service Bus instead of a real namespace.
+      - name: Start Azure Service Bus emulator
+        working-directory: .github/servicebus-emulator
+        shell: bash
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_SA_PASSWORD: "Local(!)Password123"
+        run: docker compose up -d --wait
+
+      - name: Wait for Azure Service Bus emulator to be ready
+        shell: bash
+        run: |
+          for i in {1..30}; do
+            if curl -sf http://localhost:5300/health > /dev/null; then
+              echo "Service Bus emulator is ready"
+              exit 0
+            fi
+            echo "Waiting for Service Bus emulator... ($i/30)"
+            sleep 5
+          done
+          echo "Service Bus emulator did not become ready in time"
+          docker compose -f .github/servicebus-emulator/docker-compose.yaml logs
+          exit 1
+
       # .NET Tests
       - name: Build .NET
         uses: ./.github/actions/dotnet
@@ -27,12 +52,18 @@ jobs:
         shell: bash
         run: dotnet test -c Release /p:CollectCoverage=true -m:1
         env:
-          AzureServiceBusConnectionString: ${{ secrets.AZURE_SERVICE_BUS_CONNECTION_STRING }}
+          AzureServiceBusConnectionString: "Endpoint=sb://localhost;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;"
+
+      - name: Stop Azure Service Bus emulator
+        if: always()
+        working-directory: .github/servicebus-emulator
+        shell: bash
+        run: docker compose down -v
 
       - name: Code Coverage Summary Report
-        uses: irongut/CodeCoverageSummary@v1.0.2
+        uses: irongut/CodeCoverageSummary@v1.3.0
         with:
-          filename: src/coverage.cobertura.xml
+          filename: src/coverage.net8.0.cobertura.xml
           badge: true
           format: 'markdown'
           output: 'both'

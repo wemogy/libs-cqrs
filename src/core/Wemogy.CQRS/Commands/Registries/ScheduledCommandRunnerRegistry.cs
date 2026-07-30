@@ -47,8 +47,8 @@ public class ScheduledCommandRunnerRegistry : RegistryBase<Type, TypeMethodRegis
             command,
             scheduleOptions
         };
-        dynamic res = scheduledCommandRunnerEntry.Method.Invoke(scheduledCommandRunner, parameters);
-        return res;
+        dynamic? res = scheduledCommandRunnerEntry.Method.Invoke(scheduledCommandRunner, parameters);
+        return res!;
     }
 
     protected override TypeMethodRegistryEntry InitializeEntry(Type commandType)
@@ -56,7 +56,7 @@ public class ScheduledCommandRunnerRegistry : RegistryBase<Type, TypeMethodRegis
         if (commandType.InheritsOrImplements(typeof(ICommand<>), out var resultType))
         {
             var scheduledCommandRunnerType =
-                typeof(ScheduledCommandRunner<,>).MakeGenericType(commandType, resultType?.GenericTypeArguments[0]);
+                typeof(ScheduledCommandRunner<,>).MakeGenericType(commandType, resultType!.GenericTypeArguments[0]);
             var runAsyncMethod = scheduledCommandRunnerType.GetMethods().First(x => x.Name == "ScheduleAsync");
             return new TypeMethodRegistryEntry(scheduledCommandRunnerType, runAsyncMethod);
         }

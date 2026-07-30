@@ -70,6 +70,6 @@ public class QueryEndpointBase<TQuery, TResult> : Endpoint<QueryRequest<TQuery>,
 
         var result = await queries.QueryAsync(req.Query, ct);
 
-        await SendOkAsync(result, ct);
+        await HttpContext.Response.SendOkAsync(result, cancellation: ct);
     }
 }

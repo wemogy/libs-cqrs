@@ -37,6 +37,7 @@ yarn-error.log*
 bin/
 obj/
 nuget.config
+!src/nuget.config
 
 # Terraform
 .terraform/

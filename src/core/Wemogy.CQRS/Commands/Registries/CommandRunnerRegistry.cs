@@ -28,8 +28,8 @@ public class CommandRunnerRegistry : RegistryBase<Type, TypeMethodRegistryEntry>
     private Task ExecuteCommandRunnerAsync(IServiceProvider serviceProvider, TypeMethodRegistryEntry commandRunnerEntry, ICommand command)
     {
         object commandRunner = serviceProvider.GetRequiredService(commandRunnerEntry.Type);
-        dynamic res = commandRunnerEntry.Method.Invoke(commandRunner, new object[] { command });
-        return res;
+        dynamic? res = commandRunnerEntry.Method.Invoke(commandRunner, new object[] { command });
+        return res!;
     }
 
     public Task<TResult> ExecuteCommandRunnerAsync<TResult>(IServiceProvider serviceProvider, ICommand<TResult> command)
@@ -51,8 +51,8 @@ public class CommandRunnerRegistry : RegistryBase<Type, TypeMethodRegistryEntry>
         ICommand<TResult> command)
     {
         object commandRunner = serviceProvider.GetRequiredService(commandRunnerEntry.Type);
-        dynamic res = commandRunnerEntry.Method.Invoke(commandRunner, new object[] { command });
-        return res;
+        dynamic? res = commandRunnerEntry.Method.Invoke(commandRunner, new object[] { command });
+        return res!;
     }
 
     protected override TypeMethodRegistryEntry InitializeEntry(Type commandType)
@@ -60,7 +60,7 @@ public class CommandRunnerRegistry : RegistryBase<Type, TypeMethodRegistryEntry>
         if (commandType.InheritsOrImplements(typeof(ICommand<>), out var resultType))
         {
             var commandRunnerType =
-                typeof(CommandRunner<,>).MakeGenericType(commandType, resultType?.GenericTypeArguments[0]);
+                typeof(CommandRunner<,>).MakeGenericType(commandType, resultType!.GenericTypeArguments[0]);
             var runAsyncMethod = commandRunnerType.GetMethods().First(x => x.Name == "RunAsync");
             return new TypeMethodRegistryEntry(commandRunnerType, runAsyncMethod);
         }
