@@ -1,5 +1,5 @@
 {
-  "solution": "Wemogy.CQRS.sln",
+  "solution": "Wemogy.Cqrs.slnx",
   "mappings": {
     "Wemogy.Core": "../../libs-core/src/Wemogy.Core/Wemogy.Core.csproj",
     "Wemogy.Infrastructure.Database.Core": "../../libs-infrastructure-database/src/core/Wemogy.Infrastructure.Database.Core/Wemogy.Infrastructure.Database.Core.csproj",
