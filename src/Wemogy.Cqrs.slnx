@@ -1,0 +1,22 @@
+<Solution>
+  <Folder Name="/core/">
+    <Project Path="core/Wemogy.CQRS.UnitTests.AssemblyA/Wemogy.CQRS.UnitTests.AssemblyA.csproj" />
+    <Project Path="core/Wemogy.CQRS.UnitTests.AssemblyB/Wemogy.CQRS.UnitTests.AssemblyB.csproj" />
+    <Project Path="core/Wemogy.CQRS.UnitTests/Wemogy.CQRS.UnitTests.csproj" />
+    <Project Path="core/Wemogy.CQRS/Wemogy.CQRS.csproj" />
+  </Folder>
+  <Folder Name="/extensions/" />
+  <Folder Name="/extensions/azureServiceBus/">
+    <Project Path="extensions/azureServiceBus/Wemogy.CQRS.Extensions.AzureServiceBus.UnitTests/Wemogy.CQRS.Extensions.AzureServiceBus.UnitTests.csproj" />
+    <Project Path="extensions/azureServiceBus/Wemogy.CQRS.Extensions.AzureServiceBus/Wemogy.CQRS.Extensions.AzureServiceBus.csproj" />
+  </Folder>
+  <Folder Name="/extensions/database/">
+    <Project Path="extensions/database/Wemogy.CQRS.Extensions.Database.UnitTests/Wemogy.CQRS.Extensions.Database.UnitTests.csproj" />
+    <Project Path="extensions/database/Wemogy.CQRS.Extensions.Database/Wemogy.CQRS.Extensions.Database.csproj" />
+  </Folder>
+  <Folder Name="/extensions/fastEndpoints/">
+    <Project Path="extensions/fastEndpoints/Wemogy.CQRS.Extensions.FastEndpoints.TestWebApp/Wemogy.CQRS.Extensions.FastEndpoints.TestWebApp.csproj" />
+    <Project Path="extensions/fastEndpoints/Wemogy.CQRS.Extensions.FastEndpoints.UnitTests/Wemogy.CQRS.Extensions.FastEndpoints.UnitTests.csproj" />
+    <Project Path="extensions/fastEndpoints/Wemogy.CQRS.Extensions.FastEndpoints/Wemogy.CQRS.Extensions.FastEndpoints.csproj" />
+  </Folder>
+</Solution>

@@ -1,5 +1,6 @@
 <Project>
   <PropertyGroup>
+    <DefaultTargetFrameworks>net10.0;net8.0</DefaultTargetFrameworks>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
