@@ -12,7 +12,12 @@
   <PropertyGroup>
     <CoverletOutput>$(SolutionDir)</CoverletOutput>
     <CoverletOutputFormat>json,lcov,cobertura</CoverletOutputFormat>
-    <MergeWith>$(SolutionDir)/coverage.json</MergeWith>
+    <!-- Coverlet suffixes every output with the target framework (coverage.net8.0.json), so each
+         test project has to merge into the file of its own framework; otherwise the last test
+         project overwrites the report of all previous ones. -->
+    <MergeWith>$(SolutionDir)coverage.$(TargetFramework).json</MergeWith>
+    <!-- Test helpers (web app host, scanned fixture assemblies) are not library code. -->
+    <Exclude>[*.TestWebApp]*,[*.UnitTests]*,[*.UnitTests.*]*</Exclude>
   </PropertyGroup>
 
   <ItemGroup>
