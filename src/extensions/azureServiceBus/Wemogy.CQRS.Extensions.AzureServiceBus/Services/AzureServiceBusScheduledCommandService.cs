@@ -7,6 +7,7 @@ using Wemogy.Core.Extensions;
 using Wemogy.CQRS.Commands.Abstractions;
 using Wemogy.CQRS.Commands.ValueObjects;
 using Wemogy.CQRS.Common.ValueObjects;
+using Wemogy.CQRS.Extensions.AzureServiceBus.Serialization;
 using Wemogy.CQRS.Extensions.AzureServiceBus.Setup;
 
 namespace Wemogy.CQRS.Extensions.AzureServiceBus.Services
@@ -52,6 +53,10 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Services
                 Subject = string.Empty,
                 Body = new BinaryData(jsonBody),
             };
+
+            // Stamp the body format, so that the receiving side does not have to guess it
+            message.ApplicationProperties[ScheduledCommandMessageFormat.PropertyName] =
+                ScheduledCommandMessageFormat.ScheduledCommandEnvelope;
 
             var sessionIdResolver = delayOptions?.SessionIdResolver ?? throttleOptions?.SessionIdResolver;
 

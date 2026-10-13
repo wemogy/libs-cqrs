@@ -46,7 +46,10 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Setup
                 configureServiceBusProcessorOptions?.Invoke(serviceBusProcessorOptions);
 
                 var serviceBusProcessor = _serviceBusClient.CreateProcessor(queueName, serviceBusProcessorOptions);
-                var processor = new AzureServiceBusCommandProcessor<TCommand>(serviceBusProcessor, ServiceCollection);
+                var processor = new AzureServiceBusCommandProcessor<TCommand>(
+                    serviceBusProcessor,
+                    ServiceCollection,
+                    IsRawCommandMessageSupported<TCommand>());
 
                 return processor;
             });
@@ -94,7 +97,8 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Setup
                     serviceBusSessionProcessorOptions);
                 var processor = new AzureServiceBusCommandSessionProcessor<TCommand>(
                     serviceBusSessionProcessor,
-                    ServiceCollection);
+                    ServiceCollection,
+                    IsRawCommandMessageSupported<TCommand>());
 
                 return processor;
             });
@@ -129,6 +133,12 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Setup
         {
             _delayedProcessingOptions.TryGetValue(typeof(TCommand), out var delayedProcessingOptions);
             return delayedProcessingOptions?.QueueName ?? typeof(TCommand).Name.ToLower();
+        }
+
+        private bool IsRawCommandMessageSupported<TCommand>()
+        {
+            _delayedProcessingOptions.TryGetValue(typeof(TCommand), out var delayedProcessingOptions);
+            return delayedProcessingOptions?.IsRawCommandMessageSupported ?? false;
         }
 
         public void EnsureSessionIsSupported<TCommand>()

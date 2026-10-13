@@ -15,6 +15,7 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
     {
         private readonly ServiceBusProcessor _serviceBusProcessor;
         private readonly IServiceCollection _serviceCollection;
+        private readonly bool _isRawCommandMessageSupported;
         private readonly string _handleMessageActivityName;
         private bool _isStarted;
 
@@ -25,10 +26,12 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
 
         public AzureServiceBusCommandProcessor(
             ServiceBusProcessor serviceBusProcessor,
-            IServiceCollection serviceCollection)
+            IServiceCollection serviceCollection,
+            bool isRawCommandMessageSupported = false)
         {
             _serviceBusProcessor = serviceBusProcessor;
             _serviceCollection = serviceCollection;
+            _isRawCommandMessageSupported = isRawCommandMessageSupported;
             _serviceBusProcessor.ProcessMessageAsync += HandleMessageAsync;
             _serviceBusProcessor.ProcessErrorAsync += (args) =>
             {
@@ -47,7 +50,10 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
                 services.Add(serviceDescriptor);
             }
 
-            var scheduledCommand = ScheduledCommandDeserializer.Deserialize<TCommand>(arg.Message.Body);
+            var scheduledCommand = ScheduledCommandDeserializer.Deserialize<TCommand>(
+                arg.Message.Body,
+                _isRawCommandMessageSupported,
+                arg.Message.GetMessageFormat());
 
             services.AddCommandQueryDependencies(scheduledCommand.Dependencies);
 

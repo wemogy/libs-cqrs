@@ -21,6 +21,18 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Config
             return this;
         }
 
+        /// <summary>
+        /// Allows message bodies which are not a scheduled command envelope to be deserialized
+        /// into the command type directly, e.g. Event Grid events which are forwarded to the queue.
+        /// Such messages carry no command query dependencies, so the command and its processors
+        /// must not rely on them.
+        /// </summary>
+        public DelayedProcessingOptionsBuilder WithRawCommandMessageSupport()
+        {
+            _delayedProcessingOptions.IsRawCommandMessageSupported = true;
+            return this;
+        }
+
         public DelayedProcessingOptions Build()
         {
             return _delayedProcessingOptions;
