@@ -60,9 +60,10 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Serialization
 
             if (!isRawCommandMessageSupported)
             {
-                var message = $"The message body is not a scheduled command envelope. To deserialize it into "
-                              + $"{typeof(TCommand).Name} directly, enable raw command messages via "
-                              + "ConfigureDelayedProcessing(builder => builder.WithRawCommandMessageSupport()).";
+                var message =
+                    $"The message body is not a scheduled command envelope. To deserialize it into "
+                    + $"{typeof(TCommand).Name} directly, enable raw command messages via "
+                    + "ConfigureDelayedProcessing(builder => builder.WithRawCommandMessageSupport()).";
 
                 throw Error.Unexpected("UnexpectedMessageFormat", message);
             }
@@ -130,9 +131,13 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Serialization
             // Classify by the properties of the envelope itself rather than by the command inside it,
             // so that an envelope with a missing or null command is still recognized as an envelope
             // and reports a clear error instead of being deserialized as a raw command.
-            return TryGetProperty(root, CommandTypePropertyName, out _)
-                   || (TryGetProperty(root, CommandPropertyName, out var command)
-                       && command.ValueKind == JsonValueKind.Object);
+            if (TryGetProperty(root, CommandTypePropertyName, out _))
+            {
+                return true;
+            }
+
+            return TryGetProperty(root, CommandPropertyName, out var command)
+                && command.ValueKind == JsonValueKind.Object;
         }
 
         private static bool TryGetProperty(JsonElement root, string propertyName, out JsonElement value)
