@@ -68,9 +68,12 @@ jobs:
           format: 'markdown'
           output: 'both'
 
+      # Pull requests from a fork get a read-only GITHUB_TOKEN, regardless of the permissions
+      # declared above, so commenting would fail the job. The report stays available in the
+      # job summary for those runs.
       - name: Add Coverage PR Comment
         uses: marocchino/sticky-pull-request-comment@v2
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && !github.event.pull_request.head.repo.fork
         with:
           recreate: true
           path: code-coverage-results.md
