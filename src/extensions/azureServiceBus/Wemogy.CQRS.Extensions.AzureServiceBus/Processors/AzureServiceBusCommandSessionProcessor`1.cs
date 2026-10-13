@@ -1,15 +1,12 @@
 using System;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Wemogy.Core.Errors;
-using Wemogy.Core.Json;
 using Wemogy.CQRS.Commands.Abstractions;
-using Wemogy.CQRS.Common.ValueObjects;
 using Wemogy.CQRS.Extensions.AzureServiceBus.Abstractions;
+using Wemogy.CQRS.Extensions.AzureServiceBus.Serialization;
 
 namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
 {
@@ -18,6 +15,7 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
     {
         private readonly ServiceBusSessionProcessor _serviceBusSessionProcessor;
         private readonly IServiceCollection _serviceCollection;
+        private readonly bool _isRawCommandMessageSupported;
         private bool _isStarted;
 
         /// <summary>
@@ -29,10 +27,12 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
 
         public AzureServiceBusCommandSessionProcessor(
             ServiceBusSessionProcessor serviceBusSessionProcessor,
-            IServiceCollection serviceCollection)
+            IServiceCollection serviceCollection,
+            bool isRawCommandMessageSupported = false)
         {
             _serviceBusSessionProcessor = serviceBusSessionProcessor;
             _serviceCollection = serviceCollection;
+            _isRawCommandMessageSupported = isRawCommandMessageSupported;
             _serviceBusSessionProcessor.ProcessMessageAsync += HandleMessageAsync;
             _serviceBusSessionProcessor.ProcessErrorAsync += (args) =>
             {
@@ -51,14 +51,10 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
                 services.Add(serviceDescriptor);
             }
 
-            var scheduledCommand = JsonSerializer.Deserialize<ScheduledCommand<TCommand>>(arg.Message.Body, WemogyJson.Options);
-
-            if (scheduledCommand == null)
-            {
-                throw Error.Unexpected(
-                    "ScheduledCommandIsNull",
-                    "Scheduled command is null");
-            }
+            var scheduledCommand = ScheduledCommandDeserializer.Deserialize<TCommand>(
+                arg.Message.Body,
+                _isRawCommandMessageSupported,
+                arg.Message.GetMessageFormat());
 
             services.AddCommandQueryDependencies(scheduledCommand.Dependencies);
 
