@@ -112,6 +112,42 @@ public class ScheduledCommandDeserializerTests
     }
 
     [Fact]
+    public void Deserialize_ShouldSupportEnvelopeWithoutCommandType()
+    {
+        // Arrange: the command type is diagnostic information, the receiver knows the type already
+        var body = BinaryData.FromString(
+            """
+            {"dependencies": [], "command": {"id": "a", "tenantId": "tenant-1"}}
+            """);
+
+        // Act
+        var result = ScheduledCommandDeserializer.Deserialize<PrintContextCommand>(
+            body,
+            isRawCommandMessageSupported: true);
+
+        // Assert
+        result.Command.TenantId.Should().Be("tenant-1");
+        result.CommandType.Should().Be(typeof(PrintContextCommand));
+    }
+
+    [Fact]
+    public void Deserialize_ShouldRejectEnvelopeWithoutCommandAndWithoutCommandType()
+    {
+        // Arrange
+        var body = BinaryData.FromString(
+            """
+            {"dependencies": [], "command": null}
+            """);
+
+        // Act
+        var exception = Record.Exception(() => ScheduledCommandDeserializer.Deserialize<PrintContextCommand>(body));
+
+        // Assert: neither format, so it is rejected instead of being executed with default values
+        exception.Should().NotBeNull();
+        exception!.Message.Should().Contain("WithRawCommandMessageSupport");
+    }
+
+    [Fact]
     public void Deserialize_ShouldRejectBodyWhichIsAnnouncedAsEnvelopeButIsNotOne()
     {
         // Arrange

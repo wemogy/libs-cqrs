@@ -34,6 +34,10 @@ with the resolved command query dependencies and is marked with the
 }
 ```
 
+The `commandType` is diagnostic information, since the receiver already knows the type it
+expects, so an envelope without it is still accepted. If it is present it has to be resolvable
+in the receiving process, otherwise the message is rejected.
+
 **A raw command body** is the command payload without any envelope around it. This allows a
 handler to consume messages from a foreign sender, for example an Event Grid subscription which
 forwards Blob Created events into the queue. It has to be enabled per command, because a body

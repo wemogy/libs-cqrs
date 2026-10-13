@@ -127,8 +127,12 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Serialization
                     StringComparison.OrdinalIgnoreCase);
             }
 
-            return TryGetProperty(root, CommandTypePropertyName, out var commandType)
-                   && commandType.ValueKind == JsonValueKind.String;
+            // Classify by the properties of the envelope itself rather than by the command inside it,
+            // so that an envelope with a missing or null command is still recognized as an envelope
+            // and reports a clear error instead of being deserialized as a raw command.
+            return TryGetProperty(root, CommandTypePropertyName, out _)
+                   || (TryGetProperty(root, CommandPropertyName, out var command)
+                       && command.ValueKind == JsonValueKind.Object);
         }
 
         private static bool TryGetProperty(JsonElement root, string propertyName, out JsonElement value)
