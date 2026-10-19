@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
+using Wemogy.CQRS.Commands.Abstractions;
 using Wemogy.CQRS.Common.ValueObjects;
 using Wemogy.CQRS.Extensions.AzureServiceBus.Processors;
 using Xunit;
@@ -71,6 +72,29 @@ public class ScheduledCommandServiceProvidersTests
 
         // Assert
         scope.ServiceProvider.GetRequiredService<MessageContext>().TenantId.Should().Be("message");
+    }
+
+    [Fact]
+    public async Task CreateScope_ShouldReuseTheScheduledCommandServiceAcrossMessages()
+    {
+        // Arrange
+        // The scheduled command service caches one ServiceBusSender per queue. When every message
+        // got its own instance, every message opened new sender links on the shared client until
+        // the connection hit the broker's limit of 4999 links ("Cannot allocate more handles").
+        // The client does not connect before the first send, so a placeholder namespace is enough.
+        var services = new ServiceCollection();
+        services
+            .AddCQRS()
+            .AddAzureServiceBus("Endpoint=sb://placeholder.servicebus.windows.net/;SharedAccessKeyName=key;SharedAccessKey=c2VjcmV0");
+        await using var serviceProviders = new ScheduledCommandServiceProviders(services);
+
+        // Act
+        using var firstScope = serviceProviders.CreateScope(Dependencies(new MessageContext { TenantId = "tenant-a" }));
+        using var secondScope = serviceProviders.CreateScope(Dependencies(new MessageContext { TenantId = "tenant-b" }));
+
+        // Assert
+        firstScope.ServiceProvider.GetRequiredService<IScheduledCommandService>()
+            .Should().BeSameAs(secondScope.ServiceProvider.GetRequiredService<IScheduledCommandService>());
     }
 
     private static List<CommandQueryDependency> Dependencies(MessageContext context)
