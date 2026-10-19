@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
+using Wemogy.Core.Errors.Exceptions;
 using Wemogy.CQRS.Commands.Abstractions;
 using Wemogy.CQRS.Common.ValueObjects;
 using Wemogy.CQRS.Extensions.AzureServiceBus.Processors;
@@ -97,6 +98,24 @@ public class ScheduledCommandServiceProvidersTests
             .Should().BeSameAs(secondScope.ServiceProvider.GetRequiredService<IScheduledCommandService>());
     }
 
+    [Fact]
+    public async Task CreateScope_ShouldExplainWhenASingletonInjectsADependency()
+    {
+        // Arrange
+        // A singleton is built outside of any message scope, so it cannot get a message's value.
+        var services = new ServiceCollection();
+        services.AddSingleton<SingletonWithDependency>();
+        await using var serviceProviders = new ScheduledCommandServiceProviders(services);
+        using var scope = serviceProviders.CreateScope(Dependencies(new MessageContext { TenantId = "tenant-a" }));
+
+        // Act
+        var exception = Record.Exception(() => scope.ServiceProvider.GetRequiredService<SingletonWithDependency>());
+
+        // Assert
+        exception.Should().BeOfType<UnexpectedErrorException>()
+            .Which.Code.Should().Be("ScheduledCommandDependencyResolvedOutsideOfMessageScope");
+    }
+
     private static List<CommandQueryDependency> Dependencies(MessageContext context)
     {
         return new List<CommandQueryDependency>
@@ -112,5 +131,15 @@ public class ScheduledCommandServiceProvidersTests
 
     public class SingletonProbe
     {
+    }
+
+    public class SingletonWithDependency
+    {
+        public SingletonWithDependency(MessageContext context)
+        {
+            Context = context;
+        }
+
+        public MessageContext Context { get; }
     }
 }
