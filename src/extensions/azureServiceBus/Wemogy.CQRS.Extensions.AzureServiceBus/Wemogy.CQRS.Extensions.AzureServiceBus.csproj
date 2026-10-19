@@ -23,6 +23,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Wemogy.CQRS.Extensions.AzureServiceBus.UnitTests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\..\core\Wemogy.CQRS\Wemogy.CQRS.csproj" />
   </ItemGroup>
 </Project>
