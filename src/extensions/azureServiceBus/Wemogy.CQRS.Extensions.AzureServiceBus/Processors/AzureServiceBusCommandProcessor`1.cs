@@ -14,7 +14,7 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
         where TCommand : ICommandBase
     {
         private readonly ServiceBusProcessor _serviceBusProcessor;
-        private readonly IServiceCollection _serviceCollection;
+        private readonly ScheduledCommandServiceProviders _serviceProviders;
         private readonly bool _isRawCommandMessageSupported;
         private readonly string _handleMessageActivityName;
         private bool _isStarted;
@@ -30,7 +30,7 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
             bool isRawCommandMessageSupported = false)
         {
             _serviceBusProcessor = serviceBusProcessor;
-            _serviceCollection = serviceCollection;
+            _serviceProviders = new ScheduledCommandServiceProviders(serviceCollection);
             _isRawCommandMessageSupported = isRawCommandMessageSupported;
             _serviceBusProcessor.ProcessMessageAsync += HandleMessageAsync;
             _serviceBusProcessor.ProcessErrorAsync += (args) =>
@@ -44,22 +44,14 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
         public async Task HandleMessageAsync(ProcessMessageEventArgs arg)
         {
             using var activity = Observability.DefaultActivities.StartActivity(_handleMessageActivityName);
-            var services = new ServiceCollection();
-            foreach (var serviceDescriptor in _serviceCollection)
-            {
-                services.Add(serviceDescriptor);
-            }
-
             var scheduledCommand = ScheduledCommandDeserializer.Deserialize<TCommand>(
                 arg.Message.Body,
                 _isRawCommandMessageSupported,
                 arg.Message.GetMessageFormat());
 
-            services.AddCommandQueryDependencies(scheduledCommand.Dependencies);
-
             try
             {
-                using var scope = services.BuildServiceProvider().CreateScope();
+                using var scope = _serviceProviders.CreateScope(scheduledCommand.Dependencies);
 
                 var scheduledCommandRunner = scope.ServiceProvider.GetRequiredService<IScheduledCommandRunner<TCommand>>();
 
@@ -86,6 +78,7 @@ namespace Wemogy.CQRS.Extensions.AzureServiceBus.Processors
                 Observability.DefaultActivities.StartActivity($"Stopping {nameof(AzureServiceBusCommandSessionProcessor<TCommand>)}");
             await _serviceBusProcessor.StopProcessingAsync(cancellationToken);
             await _serviceBusProcessor.DisposeAsync();
+            await _serviceProviders.DisposeAsync();
             _isStarted = false;
         }
     }
